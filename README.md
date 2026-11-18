@@ -1,0 +1,178 @@
+# storyline
+
+**User-story driven development for AI coding assistants.**
+
+storyline turns a backlog of one-line user stories into working software, one thin **vertical slice** at a time. Your AI assistant writes the code; you steer, review small diffs and try each step by hand.
+
+It works with Claude Code, Cursor, GitHub Copilot, Gemini CLI, Codex, and any tool that reads `AGENTS.md`.
+
+---
+
+## Why
+
+Spec-driven workflows ask you to specify everything up front, then let the AI build it layer by layer: first the whole database, then the whole API, then the UI. Nothing runs until the end, and you review 3,000-line diffs.
+
+storyline takes the agile route instead:
+
+- **A backlog of small user stories.** Each is one line: *As … I want … so that …*. They are cheap to add, reorder or discard.
+- **Vertical slices.** Each story cuts through every layer and ends with something you can run and use.
+- **AI as pair programmer.** The AI is the driver and writes code in small steps. You are the navigator: you decide, review and test. The AI stops after every task.
+- **Emergent architecture.** No abstractions "just in case". Only what the acceptance criteria need.
+
+## How it works
+
+```
+add ──▶ refine ──▶ slice ──▶ apply ──▶ verify ──▶ done
+                              ▲   │
+                              └───┘  one task at a time,
+                                     you test and commit in between
+```
+
+| Step | What happens | Status after |
+|---|---|---|
+| **add** | A request becomes one or more one-line stories in the backlog | `todo` |
+| **refine** | The AI asks clarifying questions (it never invents business rules) and writes 1–5 acceptance criteria in Given/When/Then | `ready` |
+| **slice** | The AI plans the thinnest change that meets the criteria, as up to 8 small tasks. Task 1 goes end to end, even if hardcoded | `ready` |
+| **apply** | One task per run: a failing test named after its criterion, the minimum code to pass it, then **stop** | `in-progress` |
+| **verify** | Every criterion is mapped to its tests, the suite runs, and you get a manual test checklist | `in-progress` |
+| **done** | The criteria move to the living docs, the story is archived, the backlog is updated | `done` |
+
+Stories can also be `refining` or `discarded`.
+
+## Install
+
+Requires Go 1.24+.
+
+```bash
+go install github.com/fjbalsamo/storyline@latest
+```
+
+Make sure `$(go env GOPATH)/bin` is in your `PATH`.
+
+## Quick start
+
+```bash
+cd my-project
+storyline init --tools claude          # or: --tools cursor,copilot  /  --tools all
+```
+
+From then on, everything happens in your AI assistant:
+
+```
+/story:add players want to book a court without calling the club
+/story:refine     → answer its questions
+/story:slice      → review the plan, approve it
+/story:apply      → try it by hand, commit, say "continue"   (repeat per task)
+/story:verify
+/story:done
+```
+
+`/story:add` rewrites your request as one or more user stories, asks when something is ambiguous, and adds them through the CLI. The assistant calls `storyline` under the hood, so it must be installed on the machine.
+
+You can also manage the backlog from the terminal:
+
+```bash
+storyline add --as "club player" --want "to book a court for a free time slot" --so-that "I don't have to call the club"
+storyline list
+```
+
+## The backlog
+
+`stories/backlog.yaml` is plain YAML. **Order is priority**: the first open story is the next one to work on.
+
+```yaml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fjbalsamo/storyline/main/schema/backlog.schema.json
+version: 1
+backlog:
+  - id: US-001
+    as: club player
+    want: to book a court for a free time slot
+    so_that: I don't have to call the club
+    status: in-progress
+    story: stories/active/US-001-book-court/story.md
+  - id: US-002
+    as: admin
+    want: to block courts for maintenance
+    so_that: nobody books an unusable court
+    status: todo
+```
+
+- **IDs are stable and never reused**, even after a story is discarded. Tests and docs reference them.
+- `story` is required from `ready` on.
+- Unknown keys are rejected, so a typo like `sothat` fails loudly.
+- The header line gives VS Code and Cursor autocompletion and validation through the [JSON Schema](schema/backlog.schema.json).
+
+## Project layout
+
+`storyline init` creates:
+
+```
+stories/
+├── backlog.yaml        # one-line stories, in priority order
+├── active/             # stories being worked on
+│   └── US-001-book-court/
+│       ├── story.md    # user story + acceptance criteria (AC-1.1, AC-1.2…)
+│       ├── slice.md    # layers touched, minimal design, what is NOT being done
+│       └── tasks.md    # ordered checklist, each task tied to its criteria
+├── done/               # finished stories: YYYY-MM-DD-US-001-book-court/
+└── living/             # how the product behaves NOW, grouped by capability
+```
+
+…plus the command files for the tools you picked (see below).
+
+## Acceptance criteria and tests
+
+Criteria are numbered after their story: `US-012` gets `AC-12.1`, `AC-12.2`, and so on. Every test that proves a criterion carries its ID in the name:
+
+```ts
+it("AC-12.1 shows only free slots", () => { … })
+```
+
+When the language doesn't allow `-` or `.` in test names (Rust, for example), use `ac_12_1_shows_only_free_slots`.
+
+This is what makes a story verifiable: each criterion → its tests → green or red.
+
+## CLI reference
+
+| Command | Description |
+|---|---|
+| `storyline init [dir] [--tools ids] [--force]` | Set up a project. Safe to re-run: existing files are kept. `--force` regenerates command files but **never** overwrites the backlog |
+| `storyline add --as … --want … --so-that …` | Append a story to the bottom of the backlog with the next ID |
+| `storyline list [-a] [-s status]` | Open stories in priority order. `▶` marks the next one. `-a` includes done/discarded |
+| `storyline validate` | Check the backlog: ID format and uniqueness, required fields, valid status, story path when needed |
+
+Global flag: `--backlog <path>` (default `stories/backlog.yaml`).
+
+## AI tool support
+
+The six commands are written once and rendered into each tool's native format.
+
+| Tool | `--tools` | Generated files | Invoke as |
+|---|---|---|---|
+| Claude Code | `claude` | `.claude/commands/story/*.md` | `/story:refine` |
+| Cursor | `cursor` | `.cursor/commands/story-*.md` | `/story-refine` |
+| GitHub Copilot | `copilot` | `.github/prompts/story-*.prompt.md` | `/story-refine` |
+| Gemini CLI | `gemini` | `.gemini/commands/story/*.toml` | `/story:refine` |
+| Codex | `codex` | `.agents/skills/story-*/SKILL.md` | `$story-refine` |
+| Any other tool | `agents-md` | a managed section in `AGENTS.md` | ask in plain words: *"refine the next story"* |
+
+`--tools all` sets them all up. The `AGENTS.md` section lives between `<!-- storyline:start -->` and `<!-- storyline:end -->`. storyline only rewrites that block and never touches the rest of your file.
+
+To customize the commands, edit the files storyline generated in your project. Running `init --force` restores the defaults.
+
+## Roadmap
+
+- [ ] `storyline trace`: report which acceptance criteria have no test
+- [ ] `storyline status <id> <status>`: move a story without editing YAML by hand
+- [ ] A single `skills` adapter, as tools converge on `SKILL.md`
+- [ ] Per-command model hints (a cheap model to read, a strong one to code)
+- [ ] Releases via GoReleaser: Homebrew tap, prebuilt binaries, `npx storyline`
+
+## Inspiration
+
+- [OpenSpec](https://github.com/Fission-AI/OpenSpec): the CLI + slash commands split, and how it supports many tools
+- [hola-ai](https://github.com/nschurmann/hola-ai): agile, vertical-slice development with AI as a pair programmer
+
+## License
+
+[MIT](LICENSE) © 2026 Franco Bálsamo

@@ -1,0 +1,15 @@
+---
+name: story-done
+description: "Close a verified story and record its behavior in the living docs"
+---
+
+Story: the story id or text the user provided
+If empty, use the first story with `status: in-progress`.
+
+1. Ask the user to confirm they tried it by hand and it works. If not, stop.
+2. Merge the story's criteria into `stories/living/<capability>.md`, where `<capability>` is the user-facing area (e.g. `bookings.md`). Ask if it is unclear.
+   - Living docs describe how the product behaves **now**: update criteria that changed instead of appending duplicates.
+   - Keep the criterion IDs.
+3. Move `stories/active/<folder>` to `stories/done/<YYYY-MM-DD>-<folder>`.
+4. In the backlog item, set `status: done` and update `story` to the new path. Run `storyline validate`.
+5. Show `storyline list`.
