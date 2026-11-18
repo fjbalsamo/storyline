@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/fjbalsamo/storyline/main/schema/backlog.schema.json",
+  "title": "storyline backlog",
+  "description": "Ordered list of one-line user stories. Order is priority.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "backlog"],
+  "properties": {
+    "version": { "const": 1 },
+    "backlog": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/item" }
+    }
+  },
+  "$defs": {
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "as", "want", "so_that", "status"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^US-\\d{3,}$",
+          "description": "Stable story ID. Never reused."
+        },
+        "as": { "type": "string", "minLength": 1, "description": "As a <role>" },
+        "want": { "type": "string", "minLength": 1, "description": "I want <goal>" },
+        "so_that": { "type": "string", "minLength": 1, "description": "So that <benefit>" },
+        "status": {
+          "enum": ["todo", "refining", "ready", "in-progress", "done", "discarded"]
+        },
+        "story": {
+          "type": "string",
+          "pattern": "\\.md$",
+          "description": "Path to the refined story.md. Required from 'ready' on."
+        }
+      },
+      "if": {
+        "properties": { "status": { "enum": ["ready", "in-progress", "done"] } }
+      },
+      "then": { "required": ["story"] }
+    }
+  }
+}
