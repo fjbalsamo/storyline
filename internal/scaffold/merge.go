@@ -12,7 +12,8 @@ import (
 )
 
 // mergeFile writes the managed block of f into the file at f.Path, leaving
-// everything outside the markers untouched.
+// everything outside the markers untouched. A file that did not exist is
+// reported as created, one that changed in place as updated.
 func mergeFile(root string, f adapters.File, res *Result) error {
 	path := filepath.Join(root, filepath.FromSlash(f.Path))
 	existing, err := os.ReadFile(path)
@@ -37,7 +38,11 @@ func mergeFile(root string, f adapters.File, res *Result) error {
 	if err := os.WriteFile(path, merged, 0o644); err != nil {
 		return fmt.Errorf("write %s: %w", f.Path, err)
 	}
-	res.Updated = append(res.Updated, f.Path)
+	if existing == nil {
+		res.Created = append(res.Created, f.Path)
+	} else {
+		res.Updated = append(res.Updated, f.Path)
+	}
 	return nil
 }
 

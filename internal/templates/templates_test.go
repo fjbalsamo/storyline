@@ -10,7 +10,7 @@ func TestCommands(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []string{"add", "refine", "slice", "apply", "verify", "done"}
+	want := []string{"context", "add", "refine", "slice", "apply", "verify", "done"}
 	if len(cmds) != len(want) {
 		t.Fatalf("got %d commands", len(cmds))
 	}
@@ -30,5 +30,27 @@ func TestCommands(t *testing.T) {
 func TestParseMissingField(t *testing.T) {
 	if _, err := parse("x", []byte("---\ndescription: d\n---\nbody")); err == nil {
 		t.Error("expected error for missing argument_hint")
+	}
+}
+
+// TestContextKeepsItsGuardrails stops future edits from dropping the rules
+// that keep AGENTS.md short, durable and free of feature details.
+func TestContextKeepsItsGuardrails(t *testing.T) {
+	cmds, err := Commands()
+	if err != nil {
+		t.Fatal(err)
+	}
+	body := cmds[0].Body
+	for _, want := range []string{
+		"What must NOT go in",
+		"next ten stories",
+		"### Do",
+		"### Don't",
+		"under 60 lines",
+		"stories/living/",
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("context body lost %q", want)
+		}
 	}
 }

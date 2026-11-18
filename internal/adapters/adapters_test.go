@@ -88,6 +88,9 @@ func TestGeminiTOMLParses(t *testing.T) {
 		t.Fatal(err)
 	}
 	for i, f := range files {
+		if f.Import != "" { // pointer file, not a command
+			continue
+		}
 		var got struct{ Description, Prompt string }
 		if _, err := toml.Decode(string(f.Content), &got); err != nil {
 			t.Fatalf("%s: invalid TOML: %v", f.Path, err)
@@ -124,6 +127,31 @@ func TestGet(t *testing.T) {
 	for _, id := range append(IDs(), "all") {
 		if !strings.Contains(err.Error(), id) {
 			t.Errorf("error does not list %q: %v", id, err)
+		}
+	}
+}
+
+// Tools that do not read AGENTS.md natively get a pointer file; the others
+// must not. Pointer files are never managed blocks.
+func TestPointerFiles(t *testing.T) {
+	want := map[string]string{"claude": "CLAUDE.md", "gemini": "GEMINI.md"}
+	for _, a := range All() {
+		files, err := a.Render(commands(t))
+		if err != nil {
+			t.Fatal(err)
+		}
+		var got string
+		for _, f := range files {
+			if f.Import == "" {
+				continue
+			}
+			got = f.Path
+			if f.Merge || !strings.Contains(string(f.Content), f.Import) {
+				t.Errorf("%s: bad pointer file %+v", a.ID(), f)
+			}
+		}
+		if got != want[a.ID()] {
+			t.Errorf("%s: pointer file = %q, want %q", a.ID(), got, want[a.ID()])
 		}
 	}
 }

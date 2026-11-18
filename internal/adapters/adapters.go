@@ -14,7 +14,14 @@ type File struct {
 	Path    string // relative to project root, slash-separated
 	Content []byte
 	Merge   bool // true only for AGENTS.md (managed block)
+	// Import, when set, makes the file a pointer: it must contain this line
+	// (e.g. "@AGENTS.md"). An existing file only gets the line appended.
+	// Content is used when the file does not exist yet.
+	Import string
 }
+
+// AgentsImport is the line pointer files use to pull in AGENTS.md.
+const AgentsImport = "@AGENTS.md"
 
 // Adapter renders the canonical commands for one AI tool.
 type Adapter interface {
@@ -27,6 +34,9 @@ type Adapter interface {
 func All() []Adapter {
 	return []Adapter{claude{}, cursor{}, copilot{}, gemini{}, codex{}, agentsMD{}}
 }
+
+// AgentsMD returns the adapter that writes AGENTS.md.
+func AgentsMD() Adapter { return agentsMD{} }
 
 // IDs returns the IDs of every adapter, in order.
 func IDs() []string {

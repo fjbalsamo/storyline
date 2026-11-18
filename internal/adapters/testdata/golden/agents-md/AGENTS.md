@@ -7,6 +7,7 @@ Story status flow: `todo → refining → ready → in-progress → done | disca
 
 When the user asks for one of these steps, do only that step and stop:
 
+- **context**: Describe the project in AGENTS.md: stack, commands, rules, Do / Don't. Input: [anything the AI should know about the project]
 - **add**: Add a one-line user story to the storyline backlog. Input: <what the user needs, in free text>
 - **refine**: Refine a backlog story into acceptance criteria. Input: [story-id] (defaults to the next open story)
 - **slice**: Plan the thinnest vertical slice that satisfies a ready story. Input: [story-id] (defaults to the first ready story)

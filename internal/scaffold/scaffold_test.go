@@ -9,7 +9,7 @@ import (
 	"github.com/fjbalsamo/storyline/internal/adapters"
 )
 
-var commands = []string{"add", "refine", "slice", "apply", "verify", "done"}
+var commands = []string{"context", "add", "refine", "slice", "apply", "verify", "done"}
 
 func tools(t *testing.T, ids ...string) []adapters.Adapter {
 	t.Helper()
@@ -111,8 +111,8 @@ func TestAllToolsCreateFiles(t *testing.T) {
 			t.Errorf("missing %s: %v", p, err)
 		}
 	}
-	if len(res.Updated) != 1 || res.Updated[0] != "AGENTS.md" {
-		t.Errorf("Updated = %v", res.Updated)
+	if !contains(res.Created, "AGENTS.md") || contains(res.Updated, "AGENTS.md") {
+		t.Errorf("Created = %v, Updated = %v", res.Created, res.Updated)
 	}
 }
 
@@ -179,4 +179,185 @@ func TestAgentsMDUnterminatedBlockIsAnError(t *testing.T) {
 	if _, err := Run(Options{Root: root, Tools: tools(t, "agents-md")}); err == nil {
 		t.Error("expected error for start marker without end marker")
 	}
+}
+
+func TestAgentsMDAlwaysCreated(t *testing.T) {
+	// Even a tool with no AGENTS.md of its own gets one.
+	root := t.TempDir()
+	if _, err := Run(Options{Root: root, Tools: tools(t, "cursor")}); err != nil {
+		t.Fatal(err)
+	}
+	got := mustRead(t, filepath.Join(root, "AGENTS.md"))
+	if !strings.Contains(got, adapters.MarkerStart) {
+		t.Errorf("AGENTS.md has no managed block:\n%s", got)
+	}
+}
+
+func TestAgentsMDAliasIsNoOp(t *testing.T) {
+	root := t.TempDir()
+	res, err := Run(Options{Root: root, Tools: tools(t, "claude", "agents-md")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	n := 0
+	for _, p := range append(res.Created, res.Updated...) {
+		if p == "AGENTS.md" {
+			n++
+		}
+	}
+	if n != 1 {
+		t.Errorf("AGENTS.md reported %d times: created %v, updated %v", n, res.Created, res.Updated)
+	}
+}
+
+func TestClaudeMDCreatedWithImport(t *testing.T) {
+	root := t.TempDir()
+	res, err := Run(Options{Root: root, Tools: tools(t, "claude")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := mustRead(t, filepath.Join(root, "CLAUDE.md")); got != "@AGENTS.md\n" {
+		t.Errorf("CLAUDE.md = %q", got)
+	}
+	if !contains(res.Created, "CLAUDE.md") {
+		t.Errorf("CLAUDE.md not reported as created: %v", res.Created)
+	}
+}
+
+func TestExistingClaudeMDGetsImportAppended(t *testing.T) {
+	for name, existing := range map[string]string{
+		"newline":    "# Mine\n\nKeep this.\n",
+		"no newline": "# Mine\n\nKeep this.",
+	} {
+		t.Run(name, func(t *testing.T) {
+			root := t.TempDir()
+			path := filepath.Join(root, "CLAUDE.md")
+			mustWrite(t, path, existing)
+			res, err := Run(Options{Root: root, Tools: tools(t, "claude")})
+			if err != nil {
+				t.Fatal(err)
+			}
+			got := mustRead(t, path)
+			if !strings.HasPrefix(got, existing) || !strings.HasSuffix(got, "\n@AGENTS.md\n") {
+				t.Errorf("CLAUDE.md = %q", got)
+			}
+			if !contains(res.Updated, "CLAUDE.md") {
+				t.Errorf("CLAUDE.md not reported as updated: %v", res.Updated)
+			}
+		})
+	}
+}
+
+func TestExistingImportIsLeftAlone(t *testing.T) {
+	root := t.TempDir()
+	path := filepath.Join(root, "CLAUDE.md")
+	const existing = "# Mine\n  @AGENTS.md  \nmore\n"
+	mustWrite(t, path, existing)
+	if _, err := Run(Options{Root: root, Tools: tools(t, "claude")}); err != nil {
+		t.Fatal(err)
+	}
+	if got := mustRead(t, path); got != existing {
+		t.Errorf("CLAUDE.md changed: %q", got)
+	}
+}
+
+func TestGeminiMDPointer(t *testing.T) {
+	root := t.TempDir()
+	if _, err := Run(Options{Root: root, Tools: tools(t, "gemini")}); err != nil {
+		t.Fatal(err)
+	}
+	if got := mustRead(t, filepath.Join(root, "GEMINI.md")); got != "@AGENTS.md\n" {
+		t.Errorf("GEMINI.md = %q", got)
+	}
+	if _, err := os.Stat(filepath.Join(root, ".gemini", "settings.json")); err == nil {
+		t.Error("settings.json must not be created")
+	}
+}
+
+func TestNativeToolsGetNoPointerFile(t *testing.T) {
+	root := t.TempDir()
+	if _, err := Run(Options{Root: root, Tools: tools(t, "cursor", "copilot", "codex")}); err != nil {
+		t.Fatal(err)
+	}
+	for _, p := range []string{"CLAUDE.md", "GEMINI.md", ".github/copilot-instructions.md"} {
+		if _, err := os.Stat(filepath.Join(root, p)); err == nil {
+			t.Errorf("%s should not exist", p)
+		}
+	}
+}
+
+func TestRerunIsByteIdentical(t *testing.T) {
+	root := t.TempDir()
+	opts := Options{Root: root, Tools: tools(t, "all")}
+	mustWrite(t, filepath.Join(root, "CLAUDE.md"), "# Mine\n")
+	if _, err := Run(opts); err != nil {
+		t.Fatal(err)
+	}
+	before := snapshot(t, root)
+	res, err := Run(opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(res.Created)+len(res.Updated) != 0 {
+		t.Errorf("rerun changed files: created %v, updated %v", res.Created, res.Updated)
+	}
+	after := snapshot(t, root)
+	for p, content := range before {
+		if after[p] != content {
+			t.Errorf("%s changed on rerun", p)
+		}
+	}
+	if len(after) != len(before) {
+		t.Errorf("file count changed: %d -> %d", len(before), len(after))
+	}
+}
+
+func contains(list []string, s string) bool {
+	for _, v := range list {
+		if v == s {
+			return true
+		}
+	}
+	return false
+}
+
+// snapshot maps every file under root to its content.
+func snapshot(t *testing.T, root string) map[string]string {
+	t.Helper()
+	out := map[string]string{}
+	err := filepath.WalkDir(root, func(p string, d os.DirEntry, err error) error {
+		if err != nil || d.IsDir() {
+			return err
+		}
+		b, err := os.ReadFile(p)
+		out[p] = string(b)
+		return err
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return out
+}
+
+func TestAgentsMDCreatedVsUpdated(t *testing.T) {
+	t.Run("missing is created", func(t *testing.T) {
+		res, err := Run(Options{Root: t.TempDir(), Tools: tools(t, "cursor")})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !contains(res.Created, "AGENTS.md") || contains(res.Updated, "AGENTS.md") {
+			t.Errorf("Created = %v, Updated = %v", res.Created, res.Updated)
+		}
+	})
+	t.Run("existing is updated", func(t *testing.T) {
+		root := t.TempDir()
+		mustWrite(t, filepath.Join(root, "AGENTS.md"), "# Mine\n")
+		res, err := Run(Options{Root: root, Tools: tools(t, "cursor")})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !contains(res.Updated, "AGENTS.md") || contains(res.Created, "AGENTS.md") {
+			t.Errorf("Created = %v, Updated = %v", res.Created, res.Updated)
+		}
+	})
 }

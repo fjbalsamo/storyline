@@ -11,6 +11,9 @@ import (
 // .agents/skills (not .codex/skills); SKILL.md needs name and description, and
 // a skill is invoked explicitly as $story-<name>.
 // Docs: https://learn.chatgpt.com/docs/build-skills (was developers.openai.com/codex/skills)
+//
+// Codex reads AGENTS.md natively, so it needs no pointer file.
+// Docs: https://learn.chatgpt.com/docs/agent-configuration/agents-md
 type codex struct{}
 
 func (codex) ID() string   { return "codex" }

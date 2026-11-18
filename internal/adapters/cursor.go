@@ -12,6 +12,10 @@ import (
 // "the text the user typed after the command".
 // Docs: https://cursor.com/docs (the commands page could not be fetched when
 // this was written; the layout follows the project spec).
+//
+// Cursor reads AGENTS.md natively (root and subdirectories), so it needs no
+// pointer file.
+// Docs: https://cursor.com/docs/context/rules
 type cursor struct{}
 
 func (cursor) ID() string   { return "cursor" }

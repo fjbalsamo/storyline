@@ -13,10 +13,12 @@ var initCmd = &cobra.Command{
 	Use:   "init [dir]",
 	Short: "Set up storyline in a project",
 	Long: `Set up storyline in a project (current directory by default):
-the stories/ tree, an empty backlog and the story commands (add, refine,
-slice, apply, verify, done) for the AI tools you pick with --tools.
-Safe to run again: existing files are kept, and the storyline section of
-AGENTS.md is updated in place.`,
+the stories/ tree, an empty backlog and the story commands (context, add,
+refine, slice, apply, verify, done) for the AI tools you pick with --tools.
+AGENTS.md is always written, and each tool that does not read it natively
+gets a one-line pointer file (CLAUDE.md, GEMINI.md) that imports it.
+Safe to run again: existing files are kept, the storyline section of
+AGENTS.md is updated in place, and pointer files only gain the missing line.`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		root := "."
@@ -47,7 +49,7 @@ AGENTS.md is updated in place.`,
 			fmt.Fprintf(out, "  skipped  %s (%s)\n", s.Path, s.Reason)
 		}
 		fmt.Fprintf(out, "\n✓ storyline is ready. Tools configured: %s.\n", toolNames(tools))
-		fmt.Fprintln(out, "Next: run the add command in your AI tool, or storyline add.")
+		fmt.Fprintln(out, "Next: run the context command in your AI tool to describe your project.")
 		return nil
 	},
 }
@@ -62,7 +64,7 @@ func toolNames(tools []adapters.Adapter) string {
 
 func init() {
 	initCmd.Flags().String("tools", "claude",
-		"comma-separated AI tools to set up: "+strings.Join(adapters.IDs(), ", ")+", or all")
+		"comma-separated AI tools to set up: "+strings.Join(adapters.IDs(), ", ")+", or all (agents-md is always set up)")
 	initCmd.Flags().Bool("force", false, "overwrite existing command files (the backlog is never overwritten)")
 	rootCmd.AddCommand(initCmd)
 }

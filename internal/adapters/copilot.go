@@ -11,6 +11,10 @@ import (
 // description, argument-hint and agent (ask|agent|plan) are documented, and
 // ${input:name:placeholder} asks the user for a value.
 // Docs: https://code.visualstudio.com/docs/agent-customization/prompt-files
+//
+// Copilot reads AGENTS.md (the nearest one wins), so it needs no pointer file.
+// If a surface turns out not to read it, add .github/copilot-instructions.md.
+// Docs: https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions
 type copilot struct{}
 
 func (copilot) ID() string   { return "copilot" }

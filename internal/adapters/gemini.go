@@ -11,6 +11,11 @@ import (
 // .gemini/commands becomes a namespace (story/add.toml is /story:add) and
 // {{args}} is replaced with what the user typed.
 // Docs: https://geminicli.com/docs/cli/custom-commands/
+//
+// Gemini CLI reads GEMINI.md, not AGENTS.md, unless context.fileName is set.
+// GEMINI.md imports AGENTS.md with the @file syntax; settings.json is never
+// touched.
+// Docs: https://geminicli.com/docs/cli/gemini-md/
 type gemini struct{}
 
 func (gemini) ID() string   { return "gemini" }
@@ -27,6 +32,11 @@ func (gemini) Render(cmds []templates.Command) ([]File, error) {
 		fmt.Fprintf(&b, "description = %s\nprompt = \"\"\"\n%s\"\"\"\n", tomlString(c.Description), tomlMultiline(fill(c.Body, "{{args}}")))
 		files = append(files, File{Path: ".gemini/commands/story/" + c.Name + ".toml", Content: []byte(b.String())})
 	}
+	files = append(files, File{
+		Path:    "GEMINI.md",
+		Content: []byte(AgentsImport + "\n"),
+		Import:  AgentsImport,
+	})
 	return files, nil
 }
 

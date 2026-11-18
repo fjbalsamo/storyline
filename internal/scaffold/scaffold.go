@@ -1,5 +1,5 @@
 // Package scaffold sets up storyline in a project: the stories/ tree, an
-// empty backlog and the command files of each selected AI tool.
+// empty backlog, AGENTS.md and the command files of each selected AI tool.
 package scaffold
 
 import (
@@ -27,7 +27,7 @@ type Skipped struct {
 
 type Result struct {
 	Created []string
-	Updated []string // merged files (AGENTS.md) that were created or changed in place
+	Updated []string // merged files (AGENTS.md, pointer files) changed in place
 	Skipped []Skipped
 }
 
@@ -72,7 +72,7 @@ func writeTools(opts Options, res *Result) error {
 	if err != nil {
 		return fmt.Errorf("load commands: %w", err)
 	}
-	for _, a := range opts.Tools {
+	for _, a := range withAgentsMD(opts.Tools) {
 		files, err := a.Render(cmds)
 		if err != nil {
 			return fmt.Errorf("render %s: %w", a.ID(), err)
@@ -86,9 +86,25 @@ func writeTools(opts Options, res *Result) error {
 	return nil
 }
 
+// withAgentsMD returns tools with the agents-md adapter first: AGENTS.md is the
+// single source of project directives, so it is written whatever tools are
+// picked. An explicit agents-md in tools is a no-op alias.
+func withAgentsMD(tools []adapters.Adapter) []adapters.Adapter {
+	out := []adapters.Adapter{adapters.AgentsMD()}
+	for _, t := range tools {
+		if t.ID() != out[0].ID() {
+			out = append(out, t)
+		}
+	}
+	return out
+}
+
 func writeFile(opts Options, f adapters.File, res *Result) error {
-	if f.Merge {
+	switch {
+	case f.Merge:
 		return mergeFile(opts.Root, f, res)
+	case f.Import != "":
+		return importFile(opts.Root, f, res)
 	}
 	created, err := writeIfMissing(opts.Root, f.Path, f.Content, opts.Force)
 	if err != nil {

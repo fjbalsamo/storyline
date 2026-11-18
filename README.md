@@ -22,14 +22,15 @@ storyline takes the agile route instead:
 ## How it works
 
 ```
-add ──▶ refine ──▶ slice ──▶ apply ──▶ verify ──▶ done
-                              ▲   │
-                              └───┘  one task at a time,
-                                     you test and commit in between
+context ──▶ add ──▶ refine ──▶ slice ──▶ apply ──▶ verify ──▶ done
+ (once)                                 ▲   │
+                                        └───┘  one task at a time,
+                                               you test and commit in between
 ```
 
 | Step | What happens | Status after |
 |---|---|---|
+| **context** | The AI inspects the repo, asks what it can't know, and writes the `## Project` section of `AGENTS.md`: stack, commands, rules, Do / Don't. Run it once, and again when the project changes | none (no story) |
 | **add** | A request becomes one or more one-line stories in the backlog | `todo` |
 | **refine** | The AI asks clarifying questions (it never invents business rules) and writes 1–5 acceptance criteria in Given/When/Then | `ready` |
 | **slice** | The AI plans the thinnest change that meets the criteria, as up to 8 small tasks. Task 1 goes end to end, even if hardcoded | `ready` |
@@ -59,6 +60,7 @@ storyline init --tools claude          # or: --tools cursor,copilot  /  --tools 
 From then on, everything happens in your AI assistant:
 
 ```
+/story:context    → describe the project once (stack, commands, rules)
 /story:add players want to book a court without calling the club
 /story:refine     → answer its questions
 /story:slice      → review the plan, approve it
@@ -66,6 +68,8 @@ From then on, everything happens in your AI assistant:
 /story:verify
 /story:done
 ```
+
+`/story:context` reads your repo, asks at most five questions and writes the project directives into `AGENTS.md`. Do it once, before your first story.
 
 `/story:add` rewrites your request as one or more user stories, asks when something is ambiguous, and adds them through the CLI. The assistant calls `storyline` under the hood, so it must be installed on the machine.
 
@@ -75,6 +79,18 @@ You can also manage the backlog from the terminal:
 storyline add --as "club player" --want "to book a court for a free time slot" --so-that "I don't have to call the club"
 storyline list
 ```
+
+## AGENTS.md: one source of project directives
+
+`AGENTS.md` is the single place for **general, durable project directives**: purpose, stack, exact build/test/lint commands, layout, engineering rules, test conventions, and short Do / Don't lists. `/story:context` writes it in a `## Project` section, outside the storyline block, and keeps your own edits when you run it again.
+
+Everything about a specific feature lives in `stories/` (`story.md`, `slice.md`, `tasks.md`, the living docs) and is never copied into `AGENTS.md`. That file is loaded into every conversation, so it stays short (under 60 lines) and only holds what will still be true after the next ten stories.
+
+`storyline init` always writes `AGENTS.md`, and makes sure each tool you pick reads it:
+
+- Cursor, Copilot and Codex read `AGENTS.md` natively.
+- Claude Code gets a `CLAUDE.md` containing `@AGENTS.md`. An existing `CLAUDE.md` only gets that line appended; the rest of it is never touched.
+- Gemini CLI gets a `GEMINI.md` containing `@AGENTS.md`.
 
 ## The backlog
 
@@ -118,7 +134,7 @@ stories/
 └── living/             # how the product behaves NOW, grouped by capability
 ```
 
-…plus the command files for the tools you picked (see below).
+…plus `AGENTS.md` and the command files for the tools you picked (see below).
 
 ## Acceptance criteria and tests
 
@@ -136,7 +152,7 @@ This is what makes a story verifiable: each criterion → its tests → green or
 
 | Command | Description |
 |---|---|
-| `storyline init [dir] [--tools ids] [--force]` | Set up a project. Safe to re-run: existing files are kept. `--force` regenerates command files but **never** overwrites the backlog |
+| `storyline init [dir] [--tools ids] [--force]` | Set up a project: stories tree, `AGENTS.md`, pointer files and commands. Safe to re-run: existing files are kept. `--force` regenerates command files but **never** overwrites the backlog |
 | `storyline add --as … --want … --so-that …` | Append a story to the bottom of the backlog with the next ID |
 | `storyline list [-a] [-s status]` | Open stories in priority order. `▶` marks the next one. `-a` includes done/discarded |
 | `storyline validate` | Check the backlog: ID format and uniqueness, required fields, valid status, story path when needed |
@@ -145,7 +161,7 @@ Global flag: `--backlog <path>` (default `stories/backlog.yaml`).
 
 ## AI tool support
 
-The six commands are written once and rendered into each tool's native format.
+The seven commands are written once and rendered into each tool's native format.
 
 | Tool | `--tools` | Generated files | Invoke as |
 |---|---|---|---|
@@ -154,9 +170,9 @@ The six commands are written once and rendered into each tool's native format.
 | GitHub Copilot | `copilot` | `.github/prompts/story-*.prompt.md` | `/story-refine` |
 | Gemini CLI | `gemini` | `.gemini/commands/story/*.toml` | `/story:refine` |
 | Codex | `codex` | `.agents/skills/story-*/SKILL.md` | `$story-refine` |
-| Any other tool | `agents-md` | a managed section in `AGENTS.md` | ask in plain words: *"refine the next story"* |
+| Any other tool | none needed | a managed section in `AGENTS.md` | ask in plain words: *"refine the next story"* |
 
-`--tools all` sets them all up. The `AGENTS.md` section lives between `<!-- storyline:start -->` and `<!-- storyline:end -->`. storyline only rewrites that block and never touches the rest of your file.
+`--tools all` sets them all up. `AGENTS.md` is written for every selection (`agents-md` is still accepted in `--tools`, as a no-op). Pointer files: `CLAUDE.md` (`claude`) and `GEMINI.md` (`gemini`). The storyline section of `AGENTS.md` lives between `<!-- storyline:start -->` and `<!-- storyline:end -->`. storyline only rewrites that block and never touches the rest of your file.
 
 To customize the commands, edit the files storyline generated in your project. Running `init --force` restores the defaults.
 

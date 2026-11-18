@@ -21,7 +21,7 @@ type Command struct {
 const ArgsPlaceholder = "{{ARGS}}"
 
 // workflow is the fixed order commands are returned in.
-var workflow = []string{"add", "refine", "slice", "apply", "verify", "done"}
+var workflow = []string{"context", "add", "refine", "slice", "apply", "verify", "done"}
 
 type frontmatter struct {
 	Description  string `yaml:"description"`
