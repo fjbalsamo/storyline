@@ -146,7 +146,24 @@ it("AC-12.1 shows only free slots", () => { … })
 
 When the language doesn't allow `-` or `.` in test names (Rust, for example), use `ac_12_1_shows_only_free_slots`.
 
-This is what makes a story verifiable: each criterion → its tests → green or red.
+This is what makes a story verifiable: each criterion → its tests → green or red. `storyline trace` checks the first half.
+
+### How `trace` finds tests
+
+`storyline trace` scans test files under `--root` (default `.`) and reports which tests reference each criterion:
+
+```
+US-001: Cancel a booking
+  ✓ AC-1.1  cancel own booking  go/booking_test.go:7
+  ✗ AC-1.4  observation         no tests
+1/2 criteria covered
+```
+
+- **Test files:** Go `*_test.go`; JS/TS `*.test.*`, `*.spec.*` and files under `__tests__/`; Python `test_*.py` and `*_test.py`; Rust `.rs` files under `tests/` or containing `#[test]` / `#[cfg(test)]`; Java/Kotlin `*Test.*` and `*Tests.*`. The directories `.git`, `node_modules`, `target`, `vendor`, `dist`, `build` and `stories` are skipped.
+- **References:** `AC-12.1` and `ac_12_1`, in any case. The numbers are compared exactly, so `AC-1.1` never matches `AC-1.10`, and the reference must end at `_`, a non-word character or the end of the line.
+- **No boundary before `ac`:** `TestAC_1_1_Cancel` and `test_ac_1_1` both match. The price is that a longer word ending in `ac`, such as `SPAC-1.1`, would match too.
+- **Comments don't count:** a line that, once trimmed, starts with `//`, `#`, `/*`, `*` or `--` is ignored, so a criterion that only appears in a comment is reported as uncovered. The check is per line: inside a `/* … */` block only lines starting with `*` are ignored, and Python docstrings are not recognized as comments. A comment at the end of a code line (`x() // AC-1.1`) still counts.
+- **Exit codes:** `0` when every criterion in scope has at least one test, `1` when any has none (or on any other error). Use it as a CI gate: `storyline trace --all`.
 
 ## CLI reference
 
@@ -155,9 +172,33 @@ This is what makes a story verifiable: each criterion → its tests → green or
 | `storyline init [dir] [--tools ids] [--force]` | Set up a project: stories tree, `AGENTS.md`, pointer files and commands. Safe to re-run: existing files are kept. `--force` regenerates command files but **never** overwrites the backlog |
 | `storyline add --as … --want … --so-that …` | Append a story to the bottom of the backlog with the next ID |
 | `storyline list [-a] [-s status]` | Open stories in priority order. `▶` marks the next one. `-a` includes done/discarded |
-| `storyline validate` | Check the backlog: ID format and uniqueness, required fields, valid status, story path when needed |
+| `storyline validate` | Check the backlog (ID format and uniqueness, required fields, valid status, story path when needed) and every story it points to: 1–5 criteria numbered `.1, .2, …` each with Given/When/Then, at most 8 numbered tasks that reference existing criteria, and a folder that matches the status |
+| `storyline status <id> <status> [--story <path>]` | Move a story along the allowed transitions (table below). Moving to `ready` needs a story file that passes `validate`; `--story` sets its path and is only accepted with `ready`. Nothing is saved if the backlog would be invalid |
+| `storyline done <id> [--force]` | Close an `in-progress` story: needs a `tasks.md` with every task checked, moves `stories/active/<dir>` to `stories/done/<YYYY-MM-DD>-<dir>`, sets `done` and updates the story path. `--force` skips only the tasks check and prints a warning. Living docs are not touched |
+| `storyline trace [id] [--all] [--root dir]` | Show which tests prove each acceptance criterion. Defaults to `in-progress` stories; `[id]` picks one, `--all` takes every story with a `story.md`. Exits `1` if any criterion has no tests |
 
 Global flag: `--backlog <path>` (default `stories/backlog.yaml`).
+
+### Status transitions
+
+| From | To |
+|---|---|
+| `todo` | `refining`, `discarded` |
+| `refining` | `ready`, `todo`, `discarded` |
+| `ready` | `in-progress`, `refining`, `discarded` |
+| `in-progress` | `ready`, `discarded` |
+| `discarded` | `todo` |
+| `done` | none |
+
+Anything else fails and lists the allowed targets. `done` is only reachable with `storyline done <id>`.
+
+### CI
+
+`storyline validate` and `storyline trace --all` both exit `1` on failure, so they can run as CI steps:
+
+```sh
+storyline validate && storyline trace --all
+```
 
 ## AI tool support
 
@@ -178,8 +219,6 @@ To customize the commands, edit the files storyline generated in your project. R
 
 ## Roadmap
 
-- [ ] `storyline trace`: report which acceptance criteria have no test
-- [ ] `storyline status <id> <status>`: move a story without editing YAML by hand
 - [ ] A single `skills` adapter, as tools converge on `SKILL.md`
 - [ ] Per-command model hints (a cheap model to read, a strong one to code)
 - [ ] Releases via GoReleaser: Homebrew tap, prebuilt binaries, `npx storyline`
