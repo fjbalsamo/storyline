@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"os"
+	"runtime/debug"
 
 	"github.com/fjbalsamo/storyline/internal/backlog"
 	"github.com/spf13/cobra"
@@ -27,7 +28,10 @@ var usesBacklog = map[string]bool{
 	"add": true, "list": true, "validate": true, "status": true, "done": true, "trace": true,
 }
 
-func Execute() {
+// Execute runs the CLI; version is the one injected into main at build time.
+func Execute(version string) {
+	info, _ := debug.ReadBuildInfo()
+	rootCmd.Version = ResolveVersion(version, info)
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
