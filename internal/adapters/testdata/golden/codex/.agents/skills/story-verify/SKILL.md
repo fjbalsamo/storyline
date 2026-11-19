@@ -7,9 +7,11 @@ Story: the story id or text the user provided
 If empty, use the first story with `status: in-progress`.
 
 1. Check that every task in `tasks.md` is checked.
-2. For each criterion in `story.md`, find the tests whose name contains its ID (e.g. `AC-12.1`).
+2. Run `storyline trace <ID>` and `storyline validate`. Take the criterion-to-tests mapping from the trace output; do not search for tests yourself. `trace` exits with an error when a criterion has no tests: report that gap.
 3. Run the full test suite.
-4. Report as a table: criterion | tests | passing?
+4. Report as a table, from the trace output: criterion | tests | passing?
 5. Turn the criteria into a short manual test checklist (Given/When/Then as steps) for the user to try.
 
 Do not fix anything. If there are gaps, list them and suggest `/story:apply`.
+
+If a `storyline` command fails, show its error to the user and stop. Never work around it by editing `stories/backlog.yaml` or moving story folders by hand. The one exception: `storyline trace` exiting 1 because a criterion has no tests is a result to report, not a failure.

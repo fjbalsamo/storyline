@@ -19,3 +19,5 @@ Request: ${input:args:<what the user needs, in free text>}
 5. Show the result of `storyline list`.
 
 Do not refine, plan or write code.
+
+If a `storyline` command fails, show its error to the user and stop. Never work around it by editing `stories/backlog.yaml` or moving story folders by hand.

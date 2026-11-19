@@ -2,8 +2,10 @@
 ## Storyline
 
 This project is driven by a backlog of user stories managed with the `storyline` CLI.
-The backlog is `stories/backlog.yaml`; never edit it by hand when a `storyline` command can do it.
+The backlog is `stories/backlog.yaml`: never edit it or move story folders by hand.
 Story status flow: `todo → refining → ready → in-progress → done | discarded`.
+Change status with `storyline status <id> <status>` (`ready` needs `--story <path>`), close a story with `storyline done <id>`, and check which tests prove each acceptance criterion with `storyline trace <id>`.
+If a `storyline` command fails, show its error to the user and stop; never work around it by editing files.
 
 When the user asks for one of these steps, do only that step and stop:
 

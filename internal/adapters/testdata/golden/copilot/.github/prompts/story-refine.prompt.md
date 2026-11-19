@@ -8,7 +8,7 @@ Story: ${input:args:[story-id] (defaults to the next open story)}
 If empty, use the story marked ▶ in `storyline list`.
 
 1. Read the item in `stories/backlog.yaml` and the current behavior in `stories/living/`. Read code only to understand what already exists.
-2. Set the item's `status` to `refining` and run `storyline validate`.
+2. If the item is `todo` or `ready`, run `storyline status <ID> refining`.
 3. Ask the user the questions needed to remove ambiguity: at most 5, in one batch. Do not invent business rules.
 4. Create `stories/active/<ID>-<kebab-slug>/story.md`:
 
@@ -32,6 +32,8 @@ If empty, use the story marked ▶ in `storyline list`.
 5. Rules for criteria:
    - Observable from the user's point of view and testable.
    - 1 to 5 criteria. More than 5 means the story is too big: propose a split with `/story:add` instead.
-6. In the backlog item, set `status: ready` and `story: <path to story.md>`. Change only those two fields, then run `storyline validate`.
+6. Run `storyline status <ID> ready --story <path to story.md>`. It checks the story file and updates the backlog; do not edit the backlog yourself.
 
 Stop here. Do not plan or write code.
+
+If a `storyline` command fails, show its error to the user and stop. Never work around it by editing `stories/backlog.yaml` or moving story folders by hand.
