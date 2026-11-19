@@ -25,7 +25,11 @@ var validateCmd = &cobra.Command{
 			return fmt.Errorf("%s is invalid:\n%w", path, err)
 		}
 
-		fmt.Fprintf(cmd.OutOrStdout(), "✓ %s is valid (%d stories)\n", path, len(b.Items))
+		noun := "stories"
+		if len(b.Items) == 1 {
+			noun = "story"
+		}
+		fmt.Fprintf(cmd.OutOrStdout(), "✓ %s is valid (%d %s)\n", path, len(b.Items), noun)
 		return nil
 	},
 }
