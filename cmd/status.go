@@ -29,8 +29,8 @@ Moving to ready requires a story.md that passes "storyline validate".`,
 		storyPath, _ := cmd.Flags().GetString("story")
 		to := backlog.Status(args[1])
 
-		if storyPath != "" && to != backlog.StatusRefining && to != backlog.StatusReady {
-			return errors.New("--story is only accepted when moving to refining or ready")
+		if storyPath != "" && to != backlog.StatusReady {
+			return errors.New("--story is only accepted when moving to ready")
 		}
 
 		b, err := backlog.Load(path)
@@ -70,6 +70,6 @@ func applyStatus(b *backlog.Backlog, id string, to backlog.Status, storyPath str
 }
 
 func init() {
-	statusCmd.Flags().String("story", "", "path to story.md (only with refining or ready)")
+	statusCmd.Flags().String("story", "", "path to story.md (only with ready)")
 	rootCmd.AddCommand(statusCmd)
 }
