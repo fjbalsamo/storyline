@@ -1,5 +1,10 @@
 # storyline
 
+[![CI](https://github.com/fjbalsamo/storyline/actions/workflows/ci.yml/badge.svg)](https://github.com/fjbalsamo/storyline/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/fjbalsamo/storyline)](https://github.com/fjbalsamo/storyline/releases/latest)
+[![Go version](https://img.shields.io/github/go-mod/go-version/fjbalsamo/storyline)](go.mod)
+[![License](https://img.shields.io/github/license/fjbalsamo/storyline)](LICENSE)
+
 **User-story driven development for AI coding assistants.**
 
 storyline turns a backlog of one-line user stories into working software, one thin **vertical slice** at a time. Your AI assistant writes the code; you steer, review small diffs and try each step by hand.
@@ -42,13 +47,17 @@ Stories can also be `refining` or `discarded`.
 
 ## Install
 
-Requires Go 1.24+.
+**Prebuilt binaries** for macOS, Linux and Windows (amd64 and arm64) are on the [Releases page](https://github.com/fjbalsamo/storyline/releases). Download the archive for your platform, check it against the checksums file, and put `storyline` somewhere in your `PATH`.
+
+**From source**, with Go 1.24+:
 
 ```bash
 go install github.com/fjbalsamo/storyline@latest
 ```
 
 Make sure `$(go env GOPATH)/bin` is in your `PATH`.
+
+Check the install with `storyline --version`.
 
 ## Quick start
 
@@ -228,7 +237,7 @@ To customize the commands, edit the files storyline generated in your project. R
 
 - [ ] A single `skills` adapter, as tools converge on `SKILL.md`
 - [ ] Per-command model hints (a cheap model to read, a strong one to code)
-- [ ] Releases via GoReleaser: Homebrew tap, prebuilt binaries, `npx storyline`
+- [ ] More ways to install: a Homebrew tap and `npx storyline`
 
 ## Inspiration
 

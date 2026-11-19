@@ -77,9 +77,21 @@ Update `internal/backlog`, `schema/backlog.schema.json` and the README together.
 
 - Keep each PR focused on one change.
 - Add or update tests. `go test ./...` must pass.
+- CI must pass before a merge. It runs `gofmt`, `go vet` and `go test -race ./...` on Linux, macOS and Windows, so keep file paths and line endings portable (use `path` for slash paths stored in files, `filepath` for disk access).
 - Run `gofmt -l .` (it should print nothing) and `go vet ./...`.
 - Write code, comments, templates and messages in English.
 - Use [Conventional Commits](https://www.conventionalcommits.org/): `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `chore:`.
+
+## Releases
+
+Releases are fully automated. To publish `vX.Y.Z`, make sure `main` is green and tag it:
+
+```bash
+git tag vX.Y.Z
+git push origin vX.Y.Z
+```
+
+The `Release` workflow then runs the tests and [GoReleaser](https://goreleaser.com): it builds binaries for Linux, macOS and Windows (amd64 and arm64), creates the GitHub release with checksums and a changelog grouped by Conventional Commit type (`chore:` and `test:` are left out). The version printed by `storyline --version` comes from the tag. No extra secrets are needed: the workflow uses the built-in `GITHUB_TOKEN`.
 
 ## License
 
