@@ -35,4 +35,4 @@ If empty, use the first story with `status: ready` in `storyline list -s ready`.
    - No layer-by-layer plans ("all the DB first, then all the API").
 4. Show the plan and wait for the user's approval. Do not write code.
 
-If a `storyline` command fails, show its error to the user and stop. Never work around it by editing `stories/backlog.yaml` or moving story folders by hand.
+If a `storyline` command fails, show its error to the user and stop. Never work around it by editing `storyline/backlog.yaml` or moving story folders by hand.

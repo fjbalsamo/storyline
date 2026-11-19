@@ -26,7 +26,7 @@ func (agentsMD) Render(cmds []templates.Command) ([]File, error) {
 	var b strings.Builder
 	b.WriteString(MarkerStart + "\n## Storyline\n\n")
 	b.WriteString("This project is driven by a backlog of user stories managed with the `storyline` CLI.\n")
-	b.WriteString("The backlog is `stories/backlog.yaml`: never edit it or move story folders by hand.\n")
+	b.WriteString("The backlog is `storyline/backlog.yaml`: never edit it or move story folders by hand.\n")
 	b.WriteString("Story status flow: `todo → refining → ready → in-progress → done | discarded`.\n")
 	b.WriteString("Change status with `storyline status <id> <status>` (`ready` needs `--story <path>`), close a story with `storyline done <id>`, and check which tests prove each acceptance criterion with `storyline trace <id>`.\n")
 	b.WriteString("If a `storyline` command fails, show its error to the user and stop; never work around it by editing files.\n\n")

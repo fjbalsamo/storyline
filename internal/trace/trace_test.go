@@ -14,7 +14,7 @@ func TestScan(t *testing.T) {
 		id   string
 		want string // comma-separated refs; "" = uncovered
 	}{
-		{"AC-1.1", "go/booking_test.go:7"},                            // Go; production code, node_modules, stories, vendor, target ignored
+		{"AC-1.1", "go/booking_test.go:7"},                            // Go; production code, node_modules, storyline, vendor, target ignored
 		{"AC-1.2", "web/__tests__/helper.js:4, web/cancel.test.ts:2"}, // __tests__ dir and .test.ts
 		{"AC-1.3", "py/booking_test.py:1, py/test_booking.py:2"},      // both Python patterns, any case
 		{"AC-1.4", ""},                         // appears only in comments (//, #, /* */, *)

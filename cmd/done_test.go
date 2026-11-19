@@ -19,7 +19,7 @@ func fixedClock() time.Time { return time.Date(2026, 11, 19, 10, 0, 0, 0, time.L
 func project(t *testing.T, status backlog.Status, tasks string) (b *backlog.Backlog, blPath, root string) {
 	t.Helper()
 	root = t.TempDir()
-	dir := filepath.Join(root, "stories/active/US-001-x")
+	dir := filepath.Join(root, "storyline/active/US-001-x")
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -32,9 +32,9 @@ func project(t *testing.T, status backlog.Status, tasks string) (b *backlog.Back
 		}
 	}
 	b = &backlog.Backlog{Version: 1, Items: []backlog.Item{{
-		ID: "US-001", As: "a", Want: "b", SoThat: "c", Status: status, Story: "stories/active/US-001-x/story.md",
+		ID: "US-001", As: "a", Want: "b", SoThat: "c", Status: status, Story: "storyline/active/US-001-x/story.md",
 	}}}
-	blPath = filepath.Join(root, "stories/backlog.yaml")
+	blPath = filepath.Join(root, "storyline/backlog.yaml")
 	if err := b.Save(blPath); err != nil {
 		t.Fatal(err)
 	}
@@ -42,7 +42,7 @@ func project(t *testing.T, status backlog.Status, tasks string) (b *backlog.Back
 }
 
 func TestCloseStory(t *testing.T) {
-	const wantDir = "stories/done/2026-11-19-US-001-x"
+	const wantDir = "storyline/done/2026-11-19-US-001-x"
 	tests := []struct {
 		name    string
 		status  backlog.Status
@@ -68,7 +68,7 @@ func TestCloseStory(t *testing.T) {
 				if err == nil || !strings.Contains(err.Error(), tt.wantErr) {
 					t.Fatalf("err = %v, want %q", err, tt.wantErr)
 				}
-				if _, statErr := os.Stat(filepath.Join(root, "stories/active/US-001-x")); statErr != nil {
+				if _, statErr := os.Stat(filepath.Join(root, "storyline/active/US-001-x")); statErr != nil {
 					t.Error("folder moved despite failure")
 				}
 				return
@@ -82,7 +82,7 @@ func TestCloseStory(t *testing.T) {
 			if _, err := os.Stat(filepath.Join(root, wantDir, "story.md")); err != nil {
 				t.Errorf("story not moved: %v", err)
 			}
-			if _, err := os.Stat(filepath.Join(root, "stories/active/US-001-x")); !os.IsNotExist(err) {
+			if _, err := os.Stat(filepath.Join(root, "storyline/active/US-001-x")); !os.IsNotExist(err) {
 				t.Error("old folder still exists")
 			}
 			saved, err := backlog.Load(blPath)
@@ -113,10 +113,10 @@ func TestCloseStoryRollsBackOnSaveFailure(t *testing.T) {
 	if err == nil {
 		t.Fatal("expected error")
 	}
-	if _, statErr := os.Stat(filepath.Join(root, "stories/active/US-001-x/story.md")); statErr != nil {
+	if _, statErr := os.Stat(filepath.Join(root, "storyline/active/US-001-x/story.md")); statErr != nil {
 		t.Errorf("folder not moved back: %v", statErr)
 	}
-	if it := b.Items[0]; it.Status != backlog.StatusInProgress || it.Story != "stories/active/US-001-x/story.md" {
+	if it := b.Items[0]; it.Status != backlog.StatusInProgress || it.Story != "storyline/active/US-001-x/story.md" {
 		t.Errorf("in-memory item not restored: %+v", it)
 	}
 }
@@ -125,7 +125,7 @@ func TestCloseStoryRejectsNonActiveFolder(t *testing.T) {
 	b, blPath, _ := project(t, backlog.StatusInProgress, "")
 	b.Items[0].Story = "elsewhere/US-001-x/story.md"
 	_, err := closeStory(b, blPath, "US-001", false, fixedClock, &bytes.Buffer{})
-	if err == nil || !strings.Contains(err.Error(), "not under stories/active/") {
+	if err == nil || !strings.Contains(err.Error(), "not under storyline/active/") {
 		t.Errorf("err = %v", err)
 	}
 }

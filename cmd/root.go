@@ -13,6 +13,18 @@ var rootCmd = &cobra.Command{
 	Long: `storyline drives development from a backlog of user stories,
 delivering each one as a small vertical slice.`,
 	SilenceUsage: true, // don't dump usage on validation errors
+	PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+		if !usesBacklog[cmd.Name()] || cmd.Flags().Changed("backlog") {
+			return nil
+		}
+		return backlog.CheckLayout(".")
+	},
+}
+
+// usesBacklog lists the commands that fail on the old stories/ layout.
+// init checks its own target directory; migrate is the way out.
+var usesBacklog = map[string]bool{
+	"add": true, "list": true, "validate": true, "status": true, "done": true, "trace": true,
 }
 
 func Execute() {

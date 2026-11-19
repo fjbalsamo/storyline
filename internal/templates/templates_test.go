@@ -47,7 +47,7 @@ func TestContextKeepsItsGuardrails(t *testing.T) {
 		"### Do",
 		"### Don't",
 		"under 60 lines",
-		"stories/living/",
+		"storyline/living/",
 	} {
 		if !strings.Contains(body, want) {
 			t.Errorf("context body lost %q", want)

@@ -23,7 +23,7 @@ If the repo is empty, write only what the user answers, plus a note to run this 
 - **Layout:** what kind of code lives where, one line per top-level folder.
 - **Engineering rules:** error handling, logging, dependencies, anything that always applies.
 - **Test conventions:** framework, location, and the criterion-ID naming from step 3.
-- **Workflow:** one line saying work is driven by storyline (`stories/backlog.yaml`) and that current behavior is documented in `stories/living/`.
+- **Workflow:** one line saying work is driven by storyline (`storyline/backlog.yaml`) and that current behavior is documented in `storyline/living/`.
 - **References:** links to existing docs (briefs, ADRs, glossary) instead of copying them.
 - **Do / Don't:** always the last block of the section.
 
@@ -38,7 +38,7 @@ If the repo is empty, write only what the user answers, plus a note to run this 
 
 ## What must NOT go in
 
-- Anything about a specific story or feature: acceptance criteria, tasks, designs, decisions made while slicing. That lives in `stories/`.
+- Anything about a specific story or feature: acceptance criteria, tasks, designs, decisions made while slicing. That lives in `storyline/`.
 - Temporary state: "currently working on…", TODOs, known bugs.
 - Content already in other docs. Link to it instead.
 

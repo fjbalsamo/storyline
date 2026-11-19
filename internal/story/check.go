@@ -100,15 +100,15 @@ func checkTasks(itemID string, s *Story, path string) []error {
 }
 
 // checkLocation enforces that the folder matches the status:
-// ready/in-progress → stories/active/, done → stories/done/.
+// ready/in-progress → storyline/active/, done → storyline/done/.
 func checkLocation(itemID, status, storyPath string) []error {
 	p := filepath.ToSlash(storyPath)
 	var want string
 	switch status {
 	case "ready", "in-progress":
-		want = "stories/active/"
+		want = "storyline/active/"
 	case "done":
-		want = "stories/done/"
+		want = "storyline/done/"
 	default:
 		return nil
 	}

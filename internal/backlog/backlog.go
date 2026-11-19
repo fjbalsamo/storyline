@@ -1,4 +1,4 @@
-// Package backlog models the storyline backlog file (stories/backlog.yaml):
+// Package backlog models the storyline backlog file (storyline/backlog.yaml):
 // an ordered list of one-line user stories. Order is priority — the first
 // item that is not done or discarded is the next one to work on.
 package backlog
@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	DefaultPath    = "stories/backlog.yaml"
+	DefaultPath    = Dir + "/backlog.yaml"
 	SchemaURL      = "https://raw.githubusercontent.com/fjbalsamo/storyline/main/schema/backlog.schema.json"
 	CurrentVersion = 1
 )

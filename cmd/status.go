@@ -22,7 +22,7 @@ var statusCmd = &cobra.Command{
 
 Moving to ready requires a story.md that passes "storyline validate".`,
 	Example: `  storyline status US-001 refining
-  storyline status US-001 ready --story stories/active/US-001-book-court/story.md`,
+  storyline status US-001 ready --story storyline/active/US-001-book-court/story.md`,
 	Args: cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		path, _ := cmd.Flags().GetString("backlog")

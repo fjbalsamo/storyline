@@ -39,7 +39,7 @@ func init() {
 }
 
 // projectRoot is the directory story paths are relative to: the parent of
-// the directory holding the backlog (stories/backlog.yaml → project root).
+// the directory holding the backlog (storyline/backlog.yaml → project root).
 func projectRoot(backlogPath string) string {
 	return filepath.Dir(filepath.Dir(backlogPath))
 }

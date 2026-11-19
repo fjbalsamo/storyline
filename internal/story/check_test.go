@@ -27,7 +27,7 @@ func write(t *testing.T, root, rel, content string) {
 }
 
 func TestCheck(t *testing.T) {
-	const path = "stories/active/US-001-x/story.md"
+	const path = "storyline/active/US-001-x/story.md"
 	tests := []struct {
 		name, status, storyPath, story, tasks string
 		wantErr                               []string // substrings; empty = valid
@@ -46,10 +46,10 @@ func TestCheck(t *testing.T) {
 		{"task numbering", "ready", path, goodStory, "- [ ] 2. (AC-1.1) t\n", []string{"tasks.md:1:", "expected 1"}},
 		{"task no ref", "ready", path, goodStory, "- [ ] 1. t\n", []string{"references no criterion"}},
 		{"task unknown ref", "ready", path, goodStory, "- [ ] 1. (AC-1.2) t\n", []string{"AC-1.2, which is not in story.md"}},
-		{"wrong location active", "done", path, goodStory, "", []string{"requires the story under stories/done/"}},
-		{"wrong location done", "ready", "stories/done/2026-01-01-US-001-x/story.md", goodStory, "",
-			[]string{"requires the story under stories/active/"}},
-		{"missing file", "ready", "stories/active/nope/story.md", "", "", []string{"US-001:", "open story"}},
+		{"wrong location active", "done", path, goodStory, "", []string{"requires the story under storyline/done/"}},
+		{"wrong location done", "ready", "storyline/done/2026-01-01-US-001-x/story.md", goodStory, "",
+			[]string{"requires the story under storyline/active/"}},
+		{"missing file", "ready", "storyline/active/nope/story.md", "", "", []string{"US-001:", "open story"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

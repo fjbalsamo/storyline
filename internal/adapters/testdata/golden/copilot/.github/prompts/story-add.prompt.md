@@ -14,10 +14,10 @@ Request: ${input:args:<what the user needs, in free text>}
    - `so_that` is the value the user gets.
 2. If the request hides several needs, propose one story per need and ask which ones to add.
 3. If anything is ambiguous, ask before adding. Do not invent business rules.
-4. Add each story with the CLI, one call per story. Never edit `stories/backlog.yaml` by hand for this:
+4. Add each story with the CLI, one call per story. Never edit `storyline/backlog.yaml` by hand for this:
    `storyline add --as "..." --want "..." --so-that "..."`
 5. Show the result of `storyline list`.
 
 Do not refine, plan or write code.
 
-If a `storyline` command fails, show its error to the user and stop. Never work around it by editing `stories/backlog.yaml` or moving story folders by hand.
+If a `storyline` command fails, show its error to the user and stop. Never work around it by editing `storyline/backlog.yaml` or moving story folders by hand.

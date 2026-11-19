@@ -6,10 +6,10 @@ argument-hint: "[story-id] (defaults to the next open story)"
 Story: $ARGUMENTS
 If empty, use the story marked ▶ in `storyline list`.
 
-1. Read the item in `stories/backlog.yaml` and the current behavior in `stories/living/`. Read code only to understand what already exists.
+1. Read the item in `storyline/backlog.yaml` and the current behavior in `storyline/living/`. Read code only to understand what already exists.
 2. If the item is `todo` or `ready`, run `storyline status <ID> refining`.
 3. Ask the user the questions needed to remove ambiguity: at most 5, in one batch. Do not invent business rules.
-4. Create `stories/active/<ID>-<kebab-slug>/story.md`:
+4. Create `storyline/active/<ID>-<kebab-slug>/story.md`:
 
    ```markdown
    # <ID>: <short title>
@@ -35,4 +35,4 @@ If empty, use the story marked ▶ in `storyline list`.
 
 Stop here. Do not plan or write code.
 
-If a `storyline` command fails, show its error to the user and stop. Never work around it by editing `stories/backlog.yaml` or moving story folders by hand.
+If a `storyline` command fails, show its error to the user and stop. Never work around it by editing `storyline/backlog.yaml` or moving story folders by hand.

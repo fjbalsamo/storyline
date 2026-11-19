@@ -1,4 +1,4 @@
-// Package scaffold sets up storyline in a project: the stories/ tree, an
+// Package scaffold sets up storyline in a project: the storyline/ tree, an
 // empty backlog, AGENTS.md and the command files of each selected AI tool.
 package scaffold
 
@@ -31,7 +31,7 @@ type Result struct {
 	Skipped []Skipped
 }
 
-var storyDirs = []string{"stories/active", "stories/done", "stories/living"}
+var storyDirs = []string{"storyline/active", "storyline/done", "storyline/living"}
 
 func Run(opts Options) (Result, error) {
 	var res Result

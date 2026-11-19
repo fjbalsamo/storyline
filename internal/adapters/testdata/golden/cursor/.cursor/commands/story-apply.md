@@ -17,4 +17,4 @@ You are the driver; the user is the navigator. Work in small steps and stop afte
 
 If a task turns out wrong or too big, stop and propose a change to `tasks.md` instead of improvising.
 
-If a `storyline` command fails, show its error to the user and stop. Never work around it by editing `stories/backlog.yaml` or moving story folders by hand.
+If a `storyline` command fails, show its error to the user and stop. Never work around it by editing `storyline/backlog.yaml` or moving story folders by hand.

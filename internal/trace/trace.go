@@ -32,7 +32,7 @@ type Index map[Criterion][]Ref
 
 var skipDirs = map[string]bool{
 	".git": true, "node_modules": true, "target": true, "vendor": true,
-	"dist": true, "build": true, "stories": true,
+	"dist": true, "build": true, "storyline": true,
 }
 
 // refRe matches AC-12.1 and ac_12_1 (any case). Numbers are captured and

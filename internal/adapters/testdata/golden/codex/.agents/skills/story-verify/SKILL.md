@@ -14,4 +14,4 @@ If empty, use the first story with `status: in-progress`.
 
 Do not fix anything. If there are gaps, list them and suggest `/story:apply`.
 
-If a `storyline` command fails, show its error to the user and stop. Never work around it by editing `stories/backlog.yaml` or moving story folders by hand. The one exception: `storyline trace` exiting 1 because a criterion has no tests is a result to report, not a failure.
+If a `storyline` command fails, show its error to the user and stop. Never work around it by editing `storyline/backlog.yaml` or moving story folders by hand. The one exception: `storyline trace` exiting 1 because a criterion has no tests is a result to report, not a failure.

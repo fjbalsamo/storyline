@@ -14,7 +14,7 @@ backlog:
     want: to book a court for a free time slot
     so_that: I don't have to call the club
     status: done
-    story: stories/done/2026-11-18-US-001-book-court/story.md
+    story: storyline/done/2026-11-18-US-001-book-court/story.md
   - id: US-002
     as: admin
     want: to block courts for maintenance
@@ -106,7 +106,7 @@ func TestNext(t *testing.T) {
 
 func TestSaveRoundTrip(t *testing.T) {
 	b := mustDecode(t, sample)
-	path := filepath.Join(t.TempDir(), "stories", "backlog.yaml")
+	path := filepath.Join(t.TempDir(), "storyline", "backlog.yaml")
 	if err := b.Save(path); err != nil {
 		t.Fatalf("save: %v", err)
 	}

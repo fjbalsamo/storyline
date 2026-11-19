@@ -27,10 +27,10 @@ func TestRunCreatesProject(t *testing.T) {
 	}
 
 	want := []string{
-		"stories/backlog.yaml",
-		"stories/active/.gitkeep",
-		"stories/done/.gitkeep",
-		"stories/living/.gitkeep",
+		"storyline/backlog.yaml",
+		"storyline/active/.gitkeep",
+		"storyline/done/.gitkeep",
+		"storyline/living/.gitkeep",
 	}
 	for _, c := range commands {
 		want = append(want, ".claude/commands/story/"+c+".md")
@@ -62,7 +62,7 @@ func TestForceOverwritesCommandsButNotBacklog(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	backlogPath := filepath.Join(root, "stories/backlog.yaml")
+	backlogPath := filepath.Join(root, "storyline/backlog.yaml")
 	cmdPath := filepath.Join(root, ".claude/commands/story/add.md")
 	mustWrite(t, backlogPath, "user data")
 	mustWrite(t, cmdPath, "stale")

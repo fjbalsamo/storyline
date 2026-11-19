@@ -84,7 +84,7 @@ storyline list
 
 `AGENTS.md` is the single place for **general, durable project directives**: purpose, stack, exact build/test/lint commands, layout, engineering rules, test conventions, and short Do / Don't lists. `/story:context` writes it in a `## Project` section, outside the storyline block, and keeps your own edits when you run it again.
 
-Everything about a specific feature lives in `stories/` (`story.md`, `slice.md`, `tasks.md`, the living docs) and is never copied into `AGENTS.md`. That file is loaded into every conversation, so it stays short (under 60 lines) and only holds what will still be true after the next ten stories.
+Everything about a specific feature lives in `storyline/` (`story.md`, `slice.md`, `tasks.md`, the living docs) and is never copied into `AGENTS.md`. That file is loaded into every conversation, so it stays short (under 60 lines) and only holds what will still be true after the next ten stories.
 
 `storyline init` always writes `AGENTS.md`, and makes sure each tool you pick reads it:
 
@@ -94,7 +94,7 @@ Everything about a specific feature lives in `stories/` (`story.md`, `slice.md`,
 
 ## The backlog
 
-`stories/backlog.yaml` is plain YAML. **Order is priority**: the first open story is the next one to work on.
+`storyline/backlog.yaml` is plain YAML. **Order is priority**: the first open story is the next one to work on.
 
 ```yaml
 # yaml-language-server: $schema=https://raw.githubusercontent.com/fjbalsamo/storyline/main/schema/backlog.schema.json
@@ -105,7 +105,7 @@ backlog:
     want: to book a court for a free time slot
     so_that: I don't have to call the club
     status: in-progress
-    story: stories/active/US-001-book-court/story.md
+    story: storyline/active/US-001-book-court/story.md
   - id: US-002
     as: admin
     want: to block courts for maintenance
@@ -123,7 +123,7 @@ backlog:
 `storyline init` creates:
 
 ```
-stories/
+storyline/
 ├── backlog.yaml        # one-line stories, in priority order
 ├── active/             # stories being worked on
 │   └── US-001-book-court/
@@ -135,6 +135,12 @@ stories/
 ```
 
 …plus `AGENTS.md` and the command files for the tools you picked (see below).
+
+The folder is called `storyline/`, after the tool, because `stories/` collides with Storybook (and JBehave) and confuses people and AI assistants in frontend projects.
+
+### Upgrading from the `stories/` layout
+
+Earlier versions used `stories/`. Every command except `init` and `migrate` fails on that layout with `found the old layout (stories/). Run: storyline migrate`. `storyline migrate` moves `stories/backlog.yaml`, `active/`, `done/` and `living/` into `storyline/`, rewrites the `story:` paths in the backlog and validates the result, moving everything back if that fails. Anything else in `stories/` (a Storybook `Button.stories.tsx`, say) is left alone, and `stories/` is removed only if it ends up empty. Afterwards run `storyline init --tools <your tools> --force` to refresh the AI commands, and check the `## Project` section of `AGENTS.md` for references to `stories/`.
 
 ## Acceptance criteria and tests
 
@@ -159,7 +165,7 @@ US-001: Cancel a booking
 1/2 criteria covered
 ```
 
-- **Test files:** Go `*_test.go`; JS/TS `*.test.*`, `*.spec.*` and files under `__tests__/`; Python `test_*.py` and `*_test.py`; Rust `.rs` files under `tests/` or containing `#[test]` / `#[cfg(test)]`; Java/Kotlin `*Test.*` and `*Tests.*`. The directories `.git`, `node_modules`, `target`, `vendor`, `dist`, `build` and `stories` are skipped.
+- **Test files:** Go `*_test.go`; JS/TS `*.test.*`, `*.spec.*` and files under `__tests__/`; Python `test_*.py` and `*_test.py`; Rust `.rs` files under `tests/` or containing `#[test]` / `#[cfg(test)]`; Java/Kotlin `*Test.*` and `*Tests.*`. The directories `.git`, `node_modules`, `target`, `vendor`, `dist`, `build` and `storyline` are skipped.
 - **References:** `AC-12.1` and `ac_12_1`, in any case. The numbers are compared exactly, so `AC-1.1` never matches `AC-1.10`, and the reference must end at `_`, a non-word character or the end of the line.
 - **No boundary before `ac`:** `TestAC_1_1_Cancel` and `test_ac_1_1` both match. The price is that a longer word ending in `ac`, such as `SPAC-1.1`, would match too.
 - **Comments don't count:** a line that, once trimmed, starts with `//`, `#`, `/*`, `*` or `--` is ignored, so a criterion that only appears in a comment is reported as uncovered. The check is per line: inside a `/* … */` block only lines starting with `*` are ignored, and Python docstrings are not recognized as comments. A comment at the end of a code line (`x() // AC-1.1`) still counts.
@@ -170,14 +176,15 @@ US-001: Cancel a booking
 | Command | Description |
 |---|---|
 | `storyline init [dir] [--tools ids] [--force]` | Set up a project: stories tree, `AGENTS.md`, pointer files and commands. Safe to re-run: existing files are kept. `--force` regenerates command files but **never** overwrites the backlog |
+| `storyline migrate` | Move a project from the old `stories/` layout to `storyline/` (see above). Fails if `storyline/` already exists |
 | `storyline add --as … --want … --so-that …` | Append a story to the bottom of the backlog with the next ID |
 | `storyline list [-a] [-s status]` | Open stories in priority order. `▶` marks the next one. `-a` includes done/discarded |
 | `storyline validate` | Check the backlog (ID format and uniqueness, required fields, valid status, story path when needed) and every story it points to: 1–5 criteria numbered `.1, .2, …` each with Given/When/Then, at most 8 numbered tasks that reference existing criteria, and a folder that matches the status |
 | `storyline status <id> <status> [--story <path>]` | Move a story along the allowed transitions (table below). Moving to `ready` needs a story file that passes `validate`; `--story` sets its path and is only accepted with `ready`. Nothing is saved if the backlog would be invalid |
-| `storyline done <id> [--force]` | Close an `in-progress` story: needs a `tasks.md` with every task checked, moves `stories/active/<dir>` to `stories/done/<YYYY-MM-DD>-<dir>`, sets `done` and updates the story path. `--force` skips only the tasks check and prints a warning. Living docs are not touched |
+| `storyline done <id> [--force]` | Close an `in-progress` story: needs a `tasks.md` with every task checked, moves `storyline/active/<dir>` to `storyline/done/<YYYY-MM-DD>-<dir>`, sets `done` and updates the story path. `--force` skips only the tasks check and prints a warning. Living docs are not touched |
 | `storyline trace [id] [--all] [--root dir]` | Show which tests prove each acceptance criterion. Defaults to `in-progress` stories; `[id]` picks one, `--all` takes every story with a `story.md`. Exits `1` if any criterion has no tests |
 
-Global flag: `--backlog <path>` (default `stories/backlog.yaml`).
+Global flag: `--backlog <path>` (default `storyline/backlog.yaml`).
 
 ### Status transitions
 

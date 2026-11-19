@@ -65,8 +65,8 @@ func TestRenderTrace(t *testing.T) {
 
 func TestTraceScope(t *testing.T) {
 	b := &backlog.Backlog{Items: []backlog.Item{
-		{ID: "US-001", Status: backlog.StatusInProgress, Story: "stories/active/US-001-x/story.md"},
-		{ID: "US-002", Status: backlog.StatusDone, Story: "stories/done/d-US-002-x/story.md"},
+		{ID: "US-001", Status: backlog.StatusInProgress, Story: "storyline/active/US-001-x/story.md"},
+		{ID: "US-002", Status: backlog.StatusDone, Story: "storyline/done/d-US-002-x/story.md"},
 		{ID: "US-003", Status: backlog.StatusTodo},
 	}}
 	for _, tt := range []struct {

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/fjbalsamo/storyline/internal/adapters"
+	"github.com/fjbalsamo/storyline/internal/backlog"
 	"github.com/fjbalsamo/storyline/internal/scaffold"
 	"github.com/spf13/cobra"
 )
@@ -13,7 +14,7 @@ var initCmd = &cobra.Command{
 	Use:   "init [dir]",
 	Short: "Set up storyline in a project",
 	Long: `Set up storyline in a project (current directory by default):
-the stories/ tree, an empty backlog and the story commands (context, add,
+the storyline/ tree, an empty backlog and the story commands (context, add,
 refine, slice, apply, verify, done) for the AI tools you pick with --tools.
 AGENTS.md is always written, and each tool that does not read it natively
 gets a one-line pointer file (CLAUDE.md, GEMINI.md) that imports it.
@@ -26,6 +27,9 @@ AGENTS.md is updated in place, and pointer files only gain the missing line.`,
 			root = args[0]
 		}
 		force, _ := cmd.Flags().GetBool("force")
+		if err := backlog.CheckLayout(root); err != nil {
+			return err
+		}
 
 		toolIDs, _ := cmd.Flags().GetString("tools")
 		tools, err := adapters.Get(strings.Split(toolIDs, ","))

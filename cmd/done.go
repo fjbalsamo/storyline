@@ -16,15 +16,15 @@ import (
 )
 
 const (
-	activeDir = "stories/active"
-	doneDir   = "stories/done"
+	activeDir = "storyline/active"
+	doneDir   = "storyline/done"
 )
 
 var doneCmd = &cobra.Command{
 	Use:   "done <id>",
 	Short: "Close an in-progress story and archive its folder",
-	Long: `Close an in-progress story: moves stories/active/<dir> to
-stories/done/<YYYY-MM-DD>-<dir>, sets its status to done and updates its
+	Long: `Close an in-progress story: moves storyline/active/<dir> to
+storyline/done/<YYYY-MM-DD>-<dir>, sets its status to done and updates its
 story path. tasks.md must exist and every task in it must be checked
 (--force skips only that check). Living docs are not touched.`,
 	Args: cobra.ExactArgs(1),
