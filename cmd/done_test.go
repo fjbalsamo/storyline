@@ -52,7 +52,8 @@ func TestCloseStory(t *testing.T) {
 		warning string
 	}{
 		{"ok", backlog.StatusInProgress, "- [x] 1. (AC-1.1) t\n", false, "", ""},
-		{"no tasks file", backlog.StatusInProgress, "", false, "", ""},
+		{"no tasks file", backlog.StatusInProgress, "", false, "no tasks.md: run the slice command first", ""},
+		{"no tasks file forced", backlog.StatusInProgress, "", true, "", "without tasks.md"},
 		{"not in progress", backlog.StatusReady, "", false, "only in-progress", ""},
 		{"unchecked", backlog.StatusInProgress, "- [x] 1. (AC-1.1) a\n- [ ] 2. (AC-1.1) pending\n", false, "1 unchecked task(s)", ""},
 		{"unchecked forced", backlog.StatusInProgress, "- [ ] 1. (AC-1.1) pending\n", true, "", "pending"},
@@ -99,7 +100,7 @@ func TestCloseStory(t *testing.T) {
 }
 
 func TestCloseStoryRollsBackOnSaveFailure(t *testing.T) {
-	b, blPath, root := project(t, backlog.StatusInProgress, "")
+	b, blPath, root := project(t, backlog.StatusInProgress, "- [x] 1. (AC-1.1) t\n")
 	// A directory where the backlog file should be makes the rename in Save fail.
 	if err := os.Remove(blPath); err != nil {
 		t.Fatal(err)

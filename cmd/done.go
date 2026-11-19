@@ -25,8 +25,8 @@ var doneCmd = &cobra.Command{
 	Short: "Close an in-progress story and archive its folder",
 	Long: `Close an in-progress story: moves stories/active/<dir> to
 stories/done/<YYYY-MM-DD>-<dir>, sets its status to done and updates its
-story path. Every task in tasks.md must be checked (--force skips only that
-check). Living docs are not touched.`,
+story path. tasks.md must exist and every task in it must be checked
+(--force skips only that check). Living docs are not touched.`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		blPath, _ := cmd.Flags().GetString("backlog")
@@ -104,7 +104,11 @@ func doneItem(b *backlog.Backlog, id string) (*backlog.Item, error) {
 func checkTasksDone(id, dir string, force bool, warn io.Writer) error {
 	tasksPath := filepath.Join(dir, "tasks.md")
 	if _, err := os.Stat(tasksPath); errors.Is(err, os.ErrNotExist) {
-		return nil
+		if force {
+			fmt.Fprintf(warn, "warning: closing %s without tasks.md\n", id)
+			return nil
+		}
+		return fmt.Errorf("%s: no tasks.md: run the slice command first (or use --force)", id)
 	}
 	tk, err := story.ParseTasks(tasksPath)
 	if err != nil {
