@@ -7,6 +7,8 @@
 
 **User-story driven development for AI coding assistants.**
 
+![storyline demo](docs/demo.gif)
+
 storyline turns a backlog of one-line user stories into working software, one thin **vertical slice** at a time. Your AI assistant writes the code; you steer, review small diffs and try each step by hand.
 
 It works with Claude Code, Cursor, GitHub Copilot, Gemini CLI, Codex, and any tool that reads `AGENTS.md`.
