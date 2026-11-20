@@ -136,6 +136,7 @@ backlog:
 ```
 storyline/
 ├── backlog.yaml        # one-line stories, in priority order
+├── config.yaml         # this repo's name and the related repos it depends on
 ├── active/             # stories being worked on
 │   └── US-001-book-court/
 │       ├── story.md    # user story + acceptance criteria (AC-1.1, AC-1.2…)
@@ -152,6 +153,55 @@ The folder is called `storyline/`, after the tool, because `stories/` collides w
 ### Upgrading from the `stories/` layout
 
 Earlier versions used `stories/`. Every command except `init` and `migrate` fails on that layout with `found the old layout (stories/). Run: storyline migrate`. `storyline migrate` moves `stories/backlog.yaml`, `active/`, `done/` and `living/` into `storyline/`, rewrites the `story:` paths in the backlog and validates the result, moving everything back if that fails. Anything else in `stories/` (a Storybook `Button.stories.tsx`, say) is left alone, and `stories/` is removed only if it ends up empty. Afterwards run `storyline init --tools <your tools> --force` to refresh the AI commands, and check the `## Project` section of `AGENTS.md` for references to `stories/`.
+
+## Related repos
+
+A story often needs something that lives in another repo: a frontend story that needs data from the backend, say. List those repos in `storyline/config.yaml`, which is versioned with the project:
+
+```yaml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fjbalsamo/storyline/main/schema/config.schema.json
+version: 1
+metadata:
+  name: frontend-repository          # required, slug
+  description: SPA using ReactJS     # optional
+spec:
+  type: front                        # optional, free text
+  dependsOn:                         # optional
+    - name: backend-repository       # required in each item, slug
+      url: https://github.com/acme/backend   # optional, http(s) or git@host:path
+```
+
+- `version` and `metadata.name` are required. Names are slugs (`^[a-z0-9]+(-[a-z0-9]+)*$`); `dependsOn` names are unique and can't be this repo's own name. Unknown keys are rejected, and `storyline validate` checks the file.
+- `storyline init` creates it with the folder name as `metadata.name` (`My App_2` → `my-app-2`) and never overwrites it, even with `--force`. **Projects created before this file existed** keep working without it; re-run `storyline init` to add it.
+- storyline never creates, links or tracks stories in other repos, and never checks that they exist. The file only gives the AI context. People decide.
+
+**It never blocks.** When `refine` or `slice` finds that a story needs something from a repo in `dependsOn`, the AI:
+
+1. does not implement it here or pretend it exists;
+2. suggests the story for the other repo, with a line you can paste there;
+3. keeps going with this story, using a mock based on an assumed contract (`apply` uses that mock);
+4. records the dependency under `## External dependencies` in `story.md`, so it isn't lost in the chat.
+
+A suggestion looks like this:
+
+```
+Related repo: backend-repository (https://github.com/acme/backend)
+Needed: an endpoint to look up a tire by code.
+Paste it there:
+/story:add As a frontend app, I want GET /tires?code=… to return the tire's vehicle, number and category, so that the SPA can show it
+I'm not waiting for it: I'll mock GET /tires?code=… → { code, vehicle, number, category } and carry on.
+```
+
+and in `story.md`:
+
+```markdown
+## External dependencies
+- backend-repository: needs a tire lookup endpoint
+  Suggested: /story:add As a frontend app, I want GET /tires?code=… …
+  Assumed contract (mock): GET /tires?code=… → { code, vehicle, number, category }
+```
+
+The section is optional, and `validate` ignores its content. If the needed repo isn't in `dependsOn`, the AI says so and suggests adding it.
 
 ## Acceptance criteria and tests
 
@@ -186,13 +236,13 @@ US-001: Cancel a booking
 
 | Command | Description |
 |---|---|
-| `storyline init [dir] [--tools ids] [--force]` | Set up a project: stories tree, `AGENTS.md`, pointer files and commands. Safe to re-run: existing files are kept. `--force` regenerates command files but **never** overwrites the backlog |
+| `storyline init [dir] [--tools ids] [--force]` | Set up a project: stories tree, `AGENTS.md`, pointer files and commands. Also creates `storyline/config.yaml` if it is missing. Safe to re-run: existing files are kept, so re-running it is how an older project gets `config.yaml`. `--force` regenerates command files but **never** overwrites the backlog or `config.yaml` |
 | `storyline migrate` | Move a project from the old `stories/` layout to `storyline/` (see above). Fails if `storyline/` already exists |
 | `storyline add --as … --want … --so-that …` | Append a story to the bottom of the backlog with the next ID |
 | `storyline list [-a] [-s status]` | Open stories in priority order. `▶` marks the next one. `-a` includes done/discarded |
 | `storyline edit <id> [--as …] [--want …] [--so-that …]` | Fix the wording of a story. **Only `as`, `want` and `so_that` are editable**; `id`, `status` and `story` never are (use `storyline status` for status). At least one flag is required and values can't be empty. Allowed on `todo` and `refining`; on `ready` and `in-progress` it warns that `story.md` may need the same change; `done` and `discarded` stories are rejected. Comments and formatting in the backlog are kept, only the edited values change, and nothing is saved if the backlog would be invalid |
 | `storyline move <id> --top \| --bottom \| --before <id> \| --after <id>` | Reorder the backlog to change priority. Pass exactly one flag. `--top` puts the story before the first open story. Only open stories can be moved (`done` and `discarded` are history), but the `--before`/`--after` reference can have any status. The story moves with the comments directly above it and the rest of the file is left as it is. Nothing is saved if the backlog would be invalid |
-| `storyline validate` | Check the backlog (ID format and uniqueness, required fields, valid status, story path when needed) and every story it points to: 1–5 criteria numbered `.1, .2, …` each with Given/When/Then, at most 8 numbered tasks that reference existing criteria, and a folder that matches the status |
+| `storyline validate` | Check `storyline/config.yaml` when it exists (a missing file is fine), the backlog (ID format and uniqueness, required fields, valid status, story path when needed) and every story it points to: 1–5 criteria numbered `.1, .2, …` each with Given/When/Then, at most 8 numbered tasks that reference existing criteria, and a folder that matches the status |
 | `storyline status <id> <status> [--story <path>]` | Move a story along the allowed transitions (table below). Moving to `ready` needs a story file that passes `validate`; `--story` sets its path and is only accepted with `ready`. Nothing is saved if the backlog would be invalid |
 | `storyline done <id> [--force]` | Close an `in-progress` story: needs a `tasks.md` with every task checked, moves `storyline/active/<dir>` to `storyline/done/<YYYY-MM-DD>-<dir>`, sets `done` and updates the story path. `--force` skips only the tasks check and prints a warning. Living docs are not touched |
 | `storyline trace [id] [--all] [--root dir]` | Show which tests prove each acceptance criterion. Defaults to `in-progress` stories; `[id]` picks one, `--all` takes every story with a `story.md`. Exits `1` if any criterion has no tests |
