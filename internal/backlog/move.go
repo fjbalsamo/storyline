@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/fjbalsamo/storyline/internal/yamltext"
+
 	"gopkg.in/yaml.v3"
 )
 
@@ -157,8 +159,8 @@ func blockSpans(src []byte, seq *yaml.Node) []span {
 	floor := 0
 	for i, item := range seq.Content {
 		first := itemStart(src, item)
-		end := itemEnd(src, first, dashIndent)
-		spans[i] = span{leadingComments(src, first, floor), end}
+		end := yamltext.ItemEnd(src, first, dashIndent)
+		spans[i] = span{yamltext.LeadingComments(src, first, floor), end}
 		floor = end
 	}
 	return spans
@@ -166,57 +168,13 @@ func blockSpans(src []byte, seq *yaml.Node) []span {
 
 // itemStart is the offset of the line holding the item's dash.
 func itemStart(src []byte, item *yaml.Node) int {
-	pos := offsetOf(src, item.Line, 1)
-	if !bytes.HasPrefix(bytes.TrimSpace(src[pos:lineEnd(src, pos)]), []byte("-")) {
-		if p := prevLine(src, pos); p >= 0 {
+	pos := yamltext.OffsetOf(src, item.Line, 1)
+	if !bytes.HasPrefix(bytes.TrimSpace(src[pos:yamltext.LineEnd(src, pos)]), []byte("-")) {
+		if p := yamltext.PrevLine(src, pos); p >= 0 {
 			return p
 		}
 	}
 	return pos
-}
-
-func prevLine(src []byte, pos int) int {
-	if pos <= 0 {
-		return -1
-	}
-	return bytes.LastIndexByte(src[:pos-1], '\n') + 1
-}
-
-func nextOrEnd(src []byte, pos int) int {
-	if n := nextLine(src, pos); n >= 0 {
-		return n
-	}
-	return len(src)
-}
-
-// itemEnd is the offset just past the item's last line: lines deeper than
-// the dash belong to it; blank lines only count when more of it follows.
-func itemEnd(src []byte, first, dashIndent int) int {
-	end := nextOrEnd(src, first)
-	for pos := end; pos < len(src); pos = nextOrEnd(src, pos) {
-		line := src[pos:lineEnd(src, pos)]
-		if len(bytes.TrimSpace(line)) == 0 {
-			continue
-		}
-		if indentOf(line) <= dashIndent {
-			break
-		}
-		end = nextOrEnd(src, pos)
-	}
-	return end
-}
-
-// leadingComments extends the block upwards over the comment lines directly
-// above the item, never past floor (the end of the previous block).
-func leadingComments(src []byte, first, floor int) int {
-	start := first
-	for {
-		p := prevLine(src, start)
-		if p < floor || p < 0 || !bytes.HasPrefix(bytes.TrimSpace(src[p:lineEnd(src, p)]), []byte("#")) {
-			return start
-		}
-		start = p
-	}
 }
 
 // permuteBlocks puts block order[i] into slot i; the gaps between slots, and

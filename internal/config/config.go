@@ -58,8 +58,13 @@ func Load(path string) (*Config, error) {
 		return nil, fmt.Errorf("open config: %w", err)
 	}
 	defer f.Close()
+	return Decode(f)
+}
 
-	dec := yaml.NewDecoder(f)
+// Decode parses a config, rejecting unknown keys. An empty document gives an
+// empty Config, which Validate then reports.
+func Decode(r io.Reader) (*Config, error) {
+	dec := yaml.NewDecoder(r)
 	dec.KnownFields(true)
 	var c Config
 	if err := dec.Decode(&c); err != nil {
