@@ -168,3 +168,16 @@ func TestAgentsMDMentionsRelatedRepos(t *testing.T) {
 		}
 	}
 }
+
+func TestAgentsMDMentionsImport(t *testing.T) {
+	files, err := AgentsMD().Render(commands(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	body := string(files[0].Content)
+	for _, want := range []string{"**import**", "read-only", "never writes to the tracker"} {
+		if !strings.Contains(body, want) {
+			t.Errorf("AGENTS.md block lacks %q", want)
+		}
+	}
+}

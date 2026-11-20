@@ -9,7 +9,7 @@ import (
 	"github.com/fjbalsamo/storyline/internal/adapters"
 )
 
-var commands = []string{"context", "add", "refine", "slice", "apply", "verify", "done"}
+var commands = []string{"context", "add", "import", "refine", "slice", "apply", "verify", "done"}
 
 func tools(t *testing.T, ids ...string) []adapters.Adapter {
 	t.Helper()

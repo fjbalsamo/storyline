@@ -10,7 +10,7 @@ func TestCommands(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := []string{"context", "add", "refine", "slice", "apply", "verify", "done"}
+	want := []string{"context", "add", "import", "refine", "slice", "apply", "verify", "done"}
 	if len(cmds) != len(want) {
 		t.Fatalf("got %d commands", len(cmds))
 	}
@@ -96,6 +96,34 @@ func TestApplyUsesTheMock(t *testing.T) {
 	for _, want := range []string{"mock", "assumed contract", "Never block"} {
 		if !strings.Contains(body, want) {
 			t.Errorf("apply lacks %q", want)
+		}
+	}
+}
+
+func TestImportIsReadOnlyAndUsesRefs(t *testing.T) {
+	body := commandBody(t, "import")
+	for _, want := range []string{
+		"Read only",
+		"Never create, update, transition",
+		"storyline list --ref",
+		"more than 10",
+		"storyline add --as",
+		"--ref <KEY>",
+		"Do not invent missing information",
+		"needing refinement",
+		"ask **once**",
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("import lacks %q", want)
+		}
+	}
+}
+
+func TestRefineReadsTheTicketFromRef(t *testing.T) {
+	body := commandBody(t, "refine")
+	for _, want := range []string{"`ref`", "read that ticket", "read-only", "never invent business rules"} {
+		if !strings.Contains(body, want) {
+			t.Errorf("refine lacks %q", want)
 		}
 	}
 }
