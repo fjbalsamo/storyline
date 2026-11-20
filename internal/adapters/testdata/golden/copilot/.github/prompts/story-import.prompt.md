@@ -26,6 +26,7 @@ Request: ${input:args:<what to import, in free text, e.g. 'connect to Jira and b
    | TKT-002 | As an admin, I want … so that … *(needs refinement: <what is missing>)* |
 7. Add each confirmed story with the CLI, one call per story. Stories from the same item share its key as `--ref`. Never edit `storyline/backlog.yaml` by hand for this:
    `storyline add --as "..." --want "..." --so-that "..." --ref <KEY>`
+   If a story ends up without a `ref`, or with the wrong one, fix it with `storyline edit <ID> --ref <KEY>` (or `--remove-ref`). Never edit `storyline/backlog.yaml` by hand.
 8. Show the result of `storyline list`.
 
 Do not refine, plan or write code.

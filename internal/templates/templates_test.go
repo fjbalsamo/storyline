@@ -127,3 +127,12 @@ func TestRefineReadsTheTicketFromRef(t *testing.T) {
 		}
 	}
 }
+
+func TestImportCanFixARefWithEdit(t *testing.T) {
+	body := commandBody(t, "import")
+	for _, want := range []string{"storyline edit <ID> --ref <KEY>", "--remove-ref"} {
+		if !strings.Contains(body, want) {
+			t.Errorf("import lacks %q", want)
+		}
+	}
+}
