@@ -95,3 +95,101 @@ func TestCheckEditable(t *testing.T) {
 		}
 	}
 }
+
+const refDoc = `# top
+version: 1
+backlog:
+  # first
+  - id: US-001
+    as: a
+    want: b
+    so_that: c   # why
+    status: todo
+
+  - id: US-002
+    as: a
+    want: b
+    so_that: |
+      line one
+      line two
+    ref: TKT-001   # origin
+    status: todo
+`
+
+func TestApplyEditsRefInsertsAfterSoThat(t *testing.T) {
+	out, changed, err := ApplyEdits([]byte(refDoc), "US-001", Edits{Ref: str("TKT-9")})
+	if err != nil || len(changed) != 1 || changed[0] != "ref" {
+		t.Fatalf("changed = %v, err = %v", changed, err)
+	}
+	want := strings.Replace(refDoc, "    so_that: c   # why\n", "    so_that: c   # why\n    ref: TKT-9\n", 1)
+	if string(out) != want {
+		t.Errorf("out:\n%s", out)
+	}
+}
+
+func TestApplyEditsRefInsertsAfterAMultiLineSoThat(t *testing.T) {
+	src := strings.Replace(refDoc, "    ref: TKT-001   # origin\n", "", 1)
+	out, _, err := ApplyEdits([]byte(src), "US-002", Edits{Ref: str("X-1")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := strings.Replace(src, "      line two\n", "      line two\n    ref: X-1\n", 1)
+	if string(out) != want {
+		t.Errorf("out:\n%s", out)
+	}
+}
+
+func TestApplyEditsRefReplaceKeepsTheComment(t *testing.T) {
+	out, changed, err := ApplyEdits([]byte(refDoc), "US-002", Edits{Ref: str("TKT-2")})
+	if err != nil || len(changed) != 1 {
+		t.Fatal(changed, err)
+	}
+	if want := strings.Replace(refDoc, "TKT-001", "TKT-2", 1); string(out) != want {
+		t.Errorf("out:\n%s", out)
+	}
+}
+
+func TestApplyEditsRefRemove(t *testing.T) {
+	out, changed, err := ApplyEdits([]byte(refDoc), "US-002", Edits{RemoveRef: true})
+	if err != nil || len(changed) != 1 || changed[0] != "ref" {
+		t.Fatal(changed, err)
+	}
+	if want := strings.Replace(refDoc, "    ref: TKT-001   # origin\n", "", 1); string(out) != want {
+		t.Errorf("out:\n%s", out)
+	}
+}
+
+func TestApplyEditsRefNoChange(t *testing.T) {
+	for name, tt := range map[string]struct {
+		id string
+		e  Edits
+	}{
+		"remove when absent": {"US-001", Edits{RemoveRef: true}},
+		"same value":         {"US-002", Edits{Ref: str("TKT-001")}},
+	} {
+		out, changed, err := ApplyEdits([]byte(refDoc), tt.id, tt.e)
+		if err != nil || len(changed) != 0 || string(out) != refDoc {
+			t.Errorf("%s: changed = %v, err = %v", name, changed, err)
+		}
+	}
+}
+
+func TestApplyEditsRefWithText(t *testing.T) {
+	out, changed, err := ApplyEdits([]byte(refDoc), "US-001", Edits{Want: str("new"), Ref: str("T-1")})
+	if err != nil || strings.Join(changed, ",") != "want,ref" {
+		t.Fatalf("changed = %v, err = %v", changed, err)
+	}
+	it := decodeItem(t, out, "US-001")
+	if it.Want != "new" || it.Ref != "T-1" || it.SoThat != "c" {
+		t.Errorf("item = %+v", it)
+	}
+}
+
+func TestEditsTouchesText(t *testing.T) {
+	if (Edits{Ref: str("x")}).TouchesText() || (Edits{RemoveRef: true}).TouchesText() {
+		t.Error("a ref-only edit does not touch the wording")
+	}
+	if !(Edits{Want: str("x")}).TouchesText() {
+		t.Error("want is wording")
+	}
+}

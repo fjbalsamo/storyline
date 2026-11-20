@@ -4,16 +4,26 @@ import (
 	"bytes"
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/fjbalsamo/storyline/internal/yamltext"
 
 	"gopkg.in/yaml.v3"
 )
 
-// Edits holds the new text for the only fields `storyline edit` may change.
-// A nil pointer means "leave the field alone".
+// Edits holds what `storyline edit` may change: the wording of a story (As,
+// Want, SoThat) and its ref. A nil pointer means "leave the field alone".
+// RemoveRef drops the ref and is not combined with Ref.
 type Edits struct {
 	As, Want, SoThat *string
+	Ref              *string
+	RemoveRef        bool
+}
+
+// TouchesText reports whether the edit changes the wording of the story, as
+// opposed to only its ref (which is origin data and editable in any status).
+func (e Edits) TouchesText() bool {
+	return e.As != nil || e.Want != nil || e.SoThat != nil
 }
 
 type fieldEdit struct {
@@ -46,10 +56,11 @@ type patch struct {
 	text       string
 }
 
-// ApplyEdits changes the as/want/so_that values of item id directly in the
+// ApplyEdits changes the as/want/so_that and ref of item id directly in the
 // YAML text, so comments, key order and formatting outside the edited values
 // are kept byte for byte. It returns the new text and the names of the fields
-// whose value really changed; when none did, the text is returned untouched.
+// whose value really changed (as, want, so_that, ref); when none did, the
+// text is returned untouched.
 func ApplyEdits(src []byte, id string, e Edits) ([]byte, []string, error) {
 	var doc yaml.Node
 	if err := yaml.Unmarshal(src, &doc); err != nil {
@@ -96,7 +107,72 @@ func buildPatches(src []byte, item *yaml.Node, e Edits) ([]patch, []string, erro
 		patches = append(patches, patch{start, end, text})
 		changed = append(changed, f.key)
 	}
+	rp, err := refPatch(src, item, e)
+	if err != nil {
+		return nil, nil, err
+	}
+	if rp != nil {
+		patches = append(patches, *rp)
+		changed = append(changed, "ref")
+	}
 	return patches, changed, nil
+}
+
+// refPatch returns the change for the ref line, or nil when there is none:
+// the ref is replaced or removed in place, or inserted after so_that.
+func refPatch(src []byte, item *yaml.Node, e Edits) (*patch, error) {
+	k, v := yamltext.MapPair(item, "ref")
+	switch {
+	case e.RemoveRef:
+		if v == nil {
+			return nil, nil
+		}
+		return removeRefLine(src, k, v)
+	case e.Ref == nil:
+		return nil, nil
+	case v == nil:
+		return insertRefLine(src, item, *e.Ref)
+	case v.Value == *e.Ref:
+		return nil, nil
+	}
+	start, end, err := yamltext.ScalarSpan(src, k, v)
+	if err != nil {
+		return nil, fmt.Errorf("edit ref: %w", err)
+	}
+	text, err := yamltext.RenderScalar(*e.Ref)
+	if err != nil {
+		return nil, fmt.Errorf("edit ref: %w", err)
+	}
+	return &patch{start, end, text}, nil
+}
+
+func removeRefLine(src []byte, k, v *yaml.Node) (*patch, error) {
+	_, end, err := yamltext.ScalarSpan(src, k, v)
+	if err != nil {
+		return nil, fmt.Errorf("edit ref: %w", err)
+	}
+	return &patch{yamltext.OffsetOf(src, k.Line, 1), yamltext.NextOrEnd(src, end), ""}, nil
+}
+
+// insertRefLine adds `ref: value` on the line after so_that, with its indentation.
+func insertRefLine(src []byte, item *yaml.Node, value string) (*patch, error) {
+	k, v, err := fieldNodes(item, "so_that")
+	if err != nil {
+		return nil, err
+	}
+	_, end, err := yamltext.ScalarSpan(src, k, v)
+	if err != nil {
+		return nil, fmt.Errorf("edit ref: %w", err)
+	}
+	at := yamltext.NextLine(src, end)
+	if at < 0 {
+		return nil, fmt.Errorf("edit ref: no line after so_that to add it to")
+	}
+	text, err := yamltext.RenderScalar(value)
+	if err != nil {
+		return nil, fmt.Errorf("edit ref: %w", err)
+	}
+	return &patch{at, at, strings.Repeat(" ", k.Column-1) + "ref: " + text + "\n"}, nil
 }
 
 // applyPatches splices from the end so earlier offsets stay valid.
@@ -124,6 +200,12 @@ func verifyEdits(out []byte, id string, e Edits) error {
 		if got[f.key] != *f.value {
 			return fmt.Errorf("edit %s: could not rewrite the value safely", f.key)
 		}
+	}
+	switch {
+	case e.RemoveRef && it.Ref != "":
+		return fmt.Errorf("edit ref: could not remove it safely")
+	case e.Ref != nil && string(it.Ref) != *e.Ref:
+		return fmt.Errorf("edit ref: could not rewrite the value safely")
 	}
 	return nil
 }
