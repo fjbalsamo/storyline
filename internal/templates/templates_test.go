@@ -79,6 +79,7 @@ func TestRelatedReposInRefineAndSlice(t *testing.T) {
 			"ready-to-paste `/story:add",
 			"Don't wait for an answer",
 			"External dependencies",
+			"storyline config add-dependency",
 		} {
 			if !strings.Contains(body, want) {
 				t.Errorf("%s lacks %q", name, want)

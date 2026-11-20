@@ -173,6 +173,7 @@ spec:
 
 - `version` and `metadata.name` are required. Names are slugs (`^[a-z0-9]+(-[a-z0-9]+)*$`); `dependsOn` names are unique and can't be this repo's own name. Unknown keys are rejected, and `storyline validate` checks the file.
 - `storyline init` creates it with the folder name as `metadata.name` (`My App_2` → `my-app-2`) and never overwrites it, even with `--force`. **Projects created before this file existed** keep working without it; re-run `storyline init` to add it.
+- Change it from the CLI instead of by hand: `storyline config show`, `config set --description … --type …`, `config add-dependency <name> --url <url>` and `config remove-dependency <name>`. Comments and formatting stay, only the affected lines change, and nothing is saved if the result would be invalid. When the first dependency is added, it replaces the commented example `init` wrote. `metadata.name` can only be changed by hand.
 - storyline never creates, links or tracks stories in other repos, and never checks that they exist. The file only gives the AI context. People decide.
 
 **It never blocks.** When `refine` or `slice` finds that a story needs something from a repo in `dependsOn`, the AI:
@@ -201,7 +202,7 @@ and in `story.md`:
   Assumed contract (mock): GET /tires?code=… → { code, vehicle, number, category }
 ```
 
-The section is optional, and `validate` ignores its content. If the needed repo isn't in `dependsOn`, the AI says so and suggests adding it.
+The section is optional, and `validate` ignores its content. If the needed repo isn't in `dependsOn`, the AI says so and suggests the exact command, for example `storyline config add-dependency backend-repository --url https://github.com/acme/backend`. It only suggests it; you run it.
 
 ## Acceptance criteria and tests
 
@@ -242,6 +243,10 @@ US-001: Cancel a booking
 | `storyline list [-a] [-s status]` | Open stories in priority order. `▶` marks the next one. `-a` includes done/discarded |
 | `storyline edit <id> [--as …] [--want …] [--so-that …]` | Fix the wording of a story. **Only `as`, `want` and `so_that` are editable**; `id`, `status` and `story` never are (use `storyline status` for status). At least one flag is required and values can't be empty. Allowed on `todo` and `refining`; on `ready` and `in-progress` it warns that `story.md` may need the same change; `done` and `discarded` stories are rejected. Comments and formatting in the backlog are kept, only the edited values change, and nothing is saved if the backlog would be invalid |
 | `storyline move <id> --top \| --bottom \| --before <id> \| --after <id>` | Reorder the backlog to change priority. Pass exactly one flag. `--top` puts the story before the first open story. Only open stories can be moved (`done` and `discarded` are history), but the `--before`/`--after` reference can have any status. The story moves with the comments directly above it and the rest of the file is left as it is. Nothing is saved if the backlog would be invalid |
+| `storyline config show` | Print `storyline/config.yaml`: name, description, type and each dependency with its URL. Fails with `run storyline init` if the file is missing |
+| `storyline config set [--description "…"] [--type "…"]` | Change the description or type. At least one flag; an empty value clears the field. `metadata.name` is not settable: it's the repo's identity and other repos refer to it, so changing it is a manual, deliberate edit |
+| `storyline config add-dependency <name> [--url <url>]` | Add a related repo (slug, unique, not this repo's own name). If it already exists, `--url` updates its URL; without `--url` there is nothing to change |
+| `storyline config remove-dependency <name>` | Remove a related repo |
 | `storyline validate` | Check `storyline/config.yaml` when it exists (a missing file is fine), the backlog (ID format and uniqueness, required fields, valid status, story path when needed) and every story it points to: 1–5 criteria numbered `.1, .2, …` each with Given/When/Then, at most 8 numbered tasks that reference existing criteria, and a folder that matches the status |
 | `storyline status <id> <status> [--story <path>]` | Move a story along the allowed transitions (table below). Moving to `ready` needs a story file that passes `validate`; `--story` sets its path and is only accepted with `ready`. Nothing is saved if the backlog would be invalid |
 | `storyline done <id> [--force]` | Close an `in-progress` story: needs a `tasks.md` with every task checked, moves `storyline/active/<dir>` to `storyline/done/<YYYY-MM-DD>-<dir>`, sets `done` and updates the story path. `--force` skips only the tasks check and prints a warning. Living docs are not touched |

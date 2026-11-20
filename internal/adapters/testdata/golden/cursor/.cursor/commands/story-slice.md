@@ -11,7 +11,7 @@ If empty, use the first story with `status: ready` in `storyline list -s ready`.
    - Tell the user, in one short block: which repo, its URL if known, what is needed, and a ready-to-paste `/story:add …` for that repo, written from that repo's point of view.
    - **Don't wait for an answer about it.** Keep going with this story.
    - Plan a mock based on the explicit assumed contract from `## External dependencies` in `story.md`. If the story lacks one, write the assumed contract into `story.md` first.
-   - If the needed repo isn't in `dependsOn`, say so and suggest adding it to `storyline/config.yaml`.
+   - If the needed repo isn't in `dependsOn`, say so and suggest the exact command, e.g. `storyline config add-dependency <repo-name> --url <url>`. Only suggest it: don't run it, don't wait for an answer, and never edit `storyline/config.yaml` by hand.
 3. Write `slice.md` next to `story.md`:
 
    ```markdown

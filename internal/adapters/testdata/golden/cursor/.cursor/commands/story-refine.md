@@ -43,7 +43,7 @@ If empty, use the story marked ▶ in `storyline list`.
    - Tell the user, in one short block: which repo, its URL if known, what is needed, and a ready-to-paste `/story:add …` for that repo, written from that repo's point of view.
    - **Don't wait for an answer about it.** Keep going with this story.
    - Record it under `## External dependencies` in `story.md`, with an assumed contract the mock can follow.
-   - If the needed repo isn't in `dependsOn`, say so and suggest adding it to `storyline/config.yaml`.
+   - If the needed repo isn't in `dependsOn`, say so and suggest the exact command, e.g. `storyline config add-dependency <repo-name> --url <url>`. Only suggest it: don't run it, don't wait for an answer, and never edit `storyline/config.yaml` by hand.
 7. Run `storyline status <ID> ready --story <path to story.md>`. It checks the story file and updates the backlog; do not edit the backlog yourself.
 
 Stop here. Do not plan or write code.

@@ -26,6 +26,7 @@ delivering each one as a small vertical slice.`,
 // init checks its own target directory; migrate is the way out.
 var usesBacklog = map[string]bool{
 	"add": true, "edit": true, "move": true, "list": true, "validate": true, "status": true, "done": true, "trace": true,
+	"show": true, "set": true, "add-dependency": true, "remove-dependency": true,
 }
 
 // Execute runs the CLI; version is the one injected into main at build time.
