@@ -128,7 +128,7 @@ backlog:
 
 - **IDs are stable and never reused**, even after a story is discarded. Tests and docs reference them.
 - `story` is required from `ready` on.
-- `ref` is optional: where the story came from (a ticket key such as `TKT-001`). Free single-line text, never empty. Several stories can share one `ref`, because a big ticket can become several stories. Set it with `storyline add --ref`; `storyline edit` never changes it. Backlogs without `ref` stay valid.
+- `ref` is optional: where the story came from (a ticket key such as `TKT-001`). Free single-line text, never empty. Several stories can share one `ref`, because a big ticket can become several stories. Set it with `storyline add --ref`, or later with `storyline edit <id> --ref <key>`; drop it with `storyline edit <id> --remove-ref`. It can be changed in any status, even `done`, because it records where the story came from and is not part of the story. Backlogs without `ref` stay valid.
 - Unknown keys are rejected, so a typo like `sothat` fails loudly.
 - The header line gives VS Code and Cursor autocompletion and validation through the [JSON Schema](schema/backlog.schema.json).
 
@@ -175,7 +175,7 @@ The argument is free text, in any language. The assistant:
 5. shows a preview table and asks once for confirmation;
 6. adds each story with `storyline add … --ref <KEY>`, then shows `storyline list`.
 
-It stops there: refining, slicing and coding are separate steps. When you later run `refine` on an imported story, the assistant reads its ticket (read-only) for context, so it doesn't ask what the ticket already answers.
+If a story ends up without its `ref`, or with the wrong one, the assistant fixes it with `storyline edit <ID> --ref <KEY>`. It stops there: refining, slicing and coding are separate steps. When you later run `refine` on an imported story, the assistant reads its ticket (read-only) for context, so it doesn't ask what the ticket already answers.
 
 `storyline list` shows a `REF` column when a listed story has one, and `storyline list --ref TKT-001` lists the stories that came from that ticket, whatever their status.
 
@@ -266,7 +266,7 @@ US-001: Cancel a booking
 | `storyline migrate` | Move a project from the old `stories/` layout to `storyline/` (see above). Fails if `storyline/` already exists |
 | `storyline add --as … --want … --so-that … [--ref <key>]` | Append a story to the bottom of the backlog with the next ID. `--ref` records where it came from (e.g. a ticket key) |
 | `storyline list [-a] [-s status] [--ref key]` | Open stories in priority order. `▶` marks the next one. `-a` includes done/discarded. A `REF` column appears when a listed story has a ref; `--ref` lists only the stories with that ref, whatever their status |
-| `storyline edit <id> [--as …] [--want …] [--so-that …]` | Fix the wording of a story. **Only `as`, `want` and `so_that` are editable**; `id`, `status` and `story` never are (use `storyline status` for status). At least one flag is required and values can't be empty. Allowed on `todo` and `refining`; on `ready` and `in-progress` it warns that `story.md` may need the same change; `done` and `discarded` stories are rejected. Comments and formatting in the backlog are kept, only the edited values change, and nothing is saved if the backlog would be invalid |
+| `storyline edit <id> [--as …] [--want …] [--so-that …] [--ref <key> \| --remove-ref]` | Fix the wording of a story. The wording is **only `as`, `want` and `so_that`**; `id`, `status` and `story` never are editable (use `storyline status` for status). At least one flag is required and values can't be empty. Allowed on `todo` and `refining`; on `ready` and `in-progress` it warns that `story.md` may need the same change; `done` and `discarded` stories can't have their wording edited. `--ref` sets or changes where the story came from and `--remove-ref` drops it (not both): the ref can be changed in **any** status, even `done`, and never triggers the warning. Comments and formatting in the backlog are kept, only the edited values change, and nothing is saved if the backlog would be invalid |
 | `storyline move <id> --top \| --bottom \| --before <id> \| --after <id>` | Reorder the backlog to change priority. Pass exactly one flag. `--top` puts the story before the first open story. Only open stories can be moved (`done` and `discarded` are history), but the `--before`/`--after` reference can have any status. The story moves with the comments directly above it and the rest of the file is left as it is. Nothing is saved if the backlog would be invalid |
 | `storyline config show` | Print `storyline/config.yaml`: name, description, type and each dependency with its URL. Fails with `run storyline init` if the file is missing |
 | `storyline config set [--description "…"] [--type "…"]` | Change the description or type. At least one flag; an empty value clears the field. `metadata.name` is not settable: it's the repo's identity and other repos refer to it, so changing it is a manual, deliberate edit |
