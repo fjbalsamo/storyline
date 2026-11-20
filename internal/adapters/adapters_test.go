@@ -155,3 +155,16 @@ func TestPointerFiles(t *testing.T) {
 		}
 	}
 }
+
+func TestAgentsMDMentionsRelatedRepos(t *testing.T) {
+	files, err := AgentsMD().Render(commands(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	body := string(files[0].Content)
+	for _, want := range []string{"storyline/config.yaml", "spec.dependsOn", "never blocks"} {
+		if !strings.Contains(body, want) {
+			t.Errorf("AGENTS.md block lacks %q", want)
+		}
+	}
+}

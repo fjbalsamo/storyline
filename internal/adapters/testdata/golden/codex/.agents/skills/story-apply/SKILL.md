@@ -10,6 +10,7 @@ You are the driver; the user is the navigator. Work in small steps and stop afte
 
 1. If the story is `ready`, run `storyline status <ID> in-progress`.
 2. Take the **first unchecked task** in `tasks.md`. Only that one.
+   If the task touches an external dependency, use the mock with the assumed contract from `story.md`. Never block waiting for the other repo.
 3. Write a failing test whose name contains the criterion ID (e.g. `AC-12.1 shows free slots`). A reference only in a comment does not count for `storyline trace`. Run it and show that it fails.
 4. Write the minimum code that makes it pass. Run the test suite.
 5. Check the task off in `tasks.md`.

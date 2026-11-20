@@ -29,6 +29,7 @@ func (agentsMD) Render(cmds []templates.Command) ([]File, error) {
 	b.WriteString("The backlog is `storyline/backlog.yaml`: never edit it or move story folders by hand.\n")
 	b.WriteString("Story status flow: `todo → refining → ready → in-progress → done | discarded`.\n")
 	b.WriteString("Change status with `storyline status <id> <status>` (`ready` needs `--story <path>`), close a story with `storyline done <id>`, and check which tests prove each acceptance criterion with `storyline trace <id>`.\n")
+	b.WriteString("Related repos are listed in `storyline/config.yaml` (`spec.dependsOn`): the AI only suggests stories there and never blocks waiting for them.\n")
 	b.WriteString("If a `storyline` command fails, show its error to the user and stop; never work around it by editing files.\n\n")
 	b.WriteString("When the user asks for one of these steps, do only that step and stop:\n\n")
 	for _, c := range cmds {

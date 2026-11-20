@@ -30,6 +30,11 @@ func TestParseStory(t *testing.T) {
 				t.Errorf("criterion = %+v", c)
 			}
 		}},
+		{"external dependencies", "testdata/valid_story_external.md", "", func(t *testing.T, s *Story) {
+			if len(s.Criteria) != 1 || s.Criteria[0].ID != "AC-20.1" {
+				t.Errorf("criteria = %+v", s.Criteria)
+			}
+		}},
 		{"no title", "testdata/no_title.md", "no_title.md:1: missing title", nil},
 		{"missing file", "testdata/nope.md", "open story", nil},
 	}

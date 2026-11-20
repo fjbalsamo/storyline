@@ -5,6 +5,7 @@ This project is driven by a backlog of user stories managed with the `storyline`
 The backlog is `storyline/backlog.yaml`: never edit it or move story folders by hand.
 Story status flow: `todo → refining → ready → in-progress → done | discarded`.
 Change status with `storyline status <id> <status>` (`ready` needs `--story <path>`), close a story with `storyline done <id>`, and check which tests prove each acceptance criterion with `storyline trace <id>`.
+Related repos are listed in `storyline/config.yaml` (`spec.dependsOn`): the AI only suggests stories there and never blocks waiting for them.
 If a `storyline` command fails, show its error to the user and stop; never work around it by editing files.
 
 When the user asks for one of these steps, do only that step and stop:

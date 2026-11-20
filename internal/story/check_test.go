@@ -78,3 +78,22 @@ func TestCheck(t *testing.T) {
 		})
 	}
 }
+
+func TestCheckAcceptsExternalDependencies(t *testing.T) {
+	root := t.TempDir()
+	src, err := os.ReadFile("testdata/valid_story_external.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	rel := "storyline/active/US-020-tire-lookup/story.md"
+	full := filepath.Join(root, filepath.FromSlash(rel))
+	if err := os.MkdirAll(filepath.Dir(full), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(full, src, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := Check(root, "US-020", "ready", rel); err != nil {
+		t.Errorf("a story with ## External dependencies must validate: %v", err)
+	}
+}

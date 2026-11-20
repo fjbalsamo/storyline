@@ -54,3 +54,47 @@ func TestContextKeepsItsGuardrails(t *testing.T) {
 		}
 	}
 }
+
+func commandBody(t *testing.T, name string) string {
+	t.Helper()
+	cmds, err := Commands()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range cmds {
+		if c.Name == name {
+			return c.Body
+		}
+	}
+	t.Fatalf("no command %q", name)
+	return ""
+}
+
+func TestRelatedReposInRefineAndSlice(t *testing.T) {
+	for _, name := range []string{"refine", "slice"} {
+		body := commandBody(t, name)
+		for _, want := range []string{
+			"storyline/config.yaml",
+			"dependsOn",
+			"ready-to-paste `/story:add",
+			"Don't wait for an answer",
+			"External dependencies",
+		} {
+			if !strings.Contains(body, want) {
+				t.Errorf("%s lacks %q", name, want)
+			}
+		}
+	}
+	if !strings.Contains(commandBody(t, "slice"), "mock") {
+		t.Error("slice does not plan a mock")
+	}
+}
+
+func TestApplyUsesTheMock(t *testing.T) {
+	body := commandBody(t, "apply")
+	for _, want := range []string{"mock", "assumed contract", "Never block"} {
+		if !strings.Contains(body, want) {
+			t.Errorf("apply lacks %q", want)
+		}
+	}
+}
