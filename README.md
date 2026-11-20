@@ -29,7 +29,7 @@ storyline takes the agile route instead:
 ## How it works
 
 ```
-context ──▶ add ──▶ refine ──▶ slice ──▶ apply ──▶ verify ──▶ done
+context ──▶ add / import ──▶ refine ──▶ slice ──▶ apply ──▶ verify ──▶ done
  (once)                                 ▲   │
                                         └───┘  one task at a time,
                                                you test and commit in between
@@ -39,6 +39,7 @@ context ──▶ add ──▶ refine ──▶ slice ──▶ apply ──▶
 |---|---|---|
 | **context** | The AI inspects the repo, asks what it can't know, and writes the `## Project` section of `AGENTS.md`: stack, commands, rules, Do / Don't. Run it once, and again when the project changes | none (no story) |
 | **add** | A request becomes one or more one-line stories in the backlog | `todo` |
+| **import** | The AI reads tickets from an issue tracker (Jira, Linear, GitHub Issues, Azure DevOps…) through your MCP, **read-only**, and turns them into stories with `ref` set to the ticket key. See [Import from an issue tracker](#import-from-an-issue-tracker) | `todo` |
 | **refine** | The AI asks clarifying questions (it never invents business rules) and writes 1–5 acceptance criteria in Given/When/Then | `ready` |
 | **slice** | The AI plans the thinnest change that meets the criteria, as up to 8 small tasks. Task 1 goes end to end, even if hardcoded | `ready` |
 | **apply** | One task per run: a failing test named after its criterion, the minimum code to pass it, then **stop** | `in-progress` |
@@ -121,11 +122,13 @@ backlog:
     as: admin
     want: to block courts for maintenance
     so_that: nobody books an unusable court
+    ref: TKT-001
     status: todo
 ```
 
 - **IDs are stable and never reused**, even after a story is discarded. Tests and docs reference them.
 - `story` is required from `ready` on.
+- `ref` is optional: where the story came from (a ticket key such as `TKT-001`). Free single-line text, never empty. Several stories can share one `ref`, because a big ticket can become several stories. Set it with `storyline add --ref`; `storyline edit` never changes it. Backlogs without `ref` stay valid.
 - Unknown keys are rejected, so a typo like `sothat` fails loudly.
 - The header line gives VS Code and Cursor autocompletion and validation through the [JSON Schema](schema/backlog.schema.json).
 
@@ -153,6 +156,28 @@ The folder is called `storyline/`, after the tool, because `stories/` collides w
 ### Upgrading from the `stories/` layout
 
 Earlier versions used `stories/`. Every command except `init` and `migrate` fails on that layout with `found the old layout (stories/). Run: storyline migrate`. `storyline migrate` moves `stories/backlog.yaml`, `active/`, `done/` and `living/` into `storyline/`, rewrites the `story:` paths in the backlog and validates the result, moving everything back if that fails. Anything else in `stories/` (a Storybook `Button.stories.tsx`, say) is left alone, and `stories/` is removed only if it ends up empty. Afterwards run `storyline init --tools <your tools> --force` to refresh the AI commands, and check the `## Project` section of `AGENTS.md` for references to `stories/`.
+
+## Import from an issue tracker
+
+`/story:import` brings tickets from your issue tracker into the backlog. **storyline never connects to a tracker.** Your AI assistant does it, through whatever MCP you have connected for Jira, Linear, GitHub Issues, Azure DevOps…, and storyline only gives it the instructions and stores the result. It is **read-only**: the assistant never creates, updates, transitions, comments on or closes anything in the tracker.
+
+```
+/story:import connect to Jira and bring the tickets of project ABCD
+/story:import connect to Jira and bring the content of ticket TKT-001
+```
+
+The argument is free text, in any language. The assistant:
+
+1. finds your tracker's MCP (if there isn't one, it says which kind it needs and stops);
+2. fetches the items, and asks first if there are more than 10;
+3. checks `storyline list --ref <KEY>` and asks before importing a ticket again;
+4. rewrites each ticket as one or more *As / I want / So that* stories, never inventing what the ticket doesn't say (a vague ticket is marked as needing refinement);
+5. shows a preview table and asks once for confirmation;
+6. adds each story with `storyline add … --ref <KEY>`, then shows `storyline list`.
+
+It stops there: refining, slicing and coding are separate steps. When you later run `refine` on an imported story, the assistant reads its ticket (read-only) for context, so it doesn't ask what the ticket already answers.
+
+`storyline list` shows a `REF` column when a listed story has one, and `storyline list --ref TKT-001` lists the stories that came from that ticket, whatever their status.
 
 ## Related repos
 
@@ -239,8 +264,8 @@ US-001: Cancel a booking
 |---|---|
 | `storyline init [dir] [--tools ids] [--force]` | Set up a project: stories tree, `AGENTS.md`, pointer files and commands. Also creates `storyline/config.yaml` if it is missing. Safe to re-run: existing files are kept, so re-running it is how an older project gets `config.yaml`. `--force` regenerates command files but **never** overwrites the backlog or `config.yaml` |
 | `storyline migrate` | Move a project from the old `stories/` layout to `storyline/` (see above). Fails if `storyline/` already exists |
-| `storyline add --as … --want … --so-that …` | Append a story to the bottom of the backlog with the next ID |
-| `storyline list [-a] [-s status]` | Open stories in priority order. `▶` marks the next one. `-a` includes done/discarded |
+| `storyline add --as … --want … --so-that … [--ref <key>]` | Append a story to the bottom of the backlog with the next ID. `--ref` records where it came from (e.g. a ticket key) |
+| `storyline list [-a] [-s status] [--ref key]` | Open stories in priority order. `▶` marks the next one. `-a` includes done/discarded. A `REF` column appears when a listed story has a ref; `--ref` lists only the stories with that ref, whatever their status |
 | `storyline edit <id> [--as …] [--want …] [--so-that …]` | Fix the wording of a story. **Only `as`, `want` and `so_that` are editable**; `id`, `status` and `story` never are (use `storyline status` for status). At least one flag is required and values can't be empty. Allowed on `todo` and `refining`; on `ready` and `in-progress` it warns that `story.md` may need the same change; `done` and `discarded` stories are rejected. Comments and formatting in the backlog are kept, only the edited values change, and nothing is saved if the backlog would be invalid |
 | `storyline move <id> --top \| --bottom \| --before <id> \| --after <id>` | Reorder the backlog to change priority. Pass exactly one flag. `--top` puts the story before the first open story. Only open stories can be moved (`done` and `discarded` are history), but the `--before`/`--after` reference can have any status. The story moves with the comments directly above it and the rest of the file is left as it is. Nothing is saved if the backlog would be invalid |
 | `storyline config show` | Print `storyline/config.yaml`: name, description, type and each dependency with its URL. Fails with `run storyline init` if the file is missing |
