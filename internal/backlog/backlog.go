@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -48,11 +49,33 @@ func (s Status) Open() bool {
 	return s != StatusDone && s != StatusDiscarded
 }
 
+// Ref says where a story came from, e.g. an issue tracker key (TKT-001).
+// It is free single-line text, and several stories may share one.
+type Ref string
+
+// UnmarshalYAML rejects a ref that is present but empty or spans lines. (A
+// bare `ref:` is a null and counts as absent.)
+func (r *Ref) UnmarshalYAML(n *yaml.Node) error {
+	var s string
+	if err := n.Decode(&s); err != nil {
+		return fmt.Errorf("line %d: ref must be text: %w", n.Line, err)
+	}
+	if strings.TrimSpace(s) == "" {
+		return fmt.Errorf("line %d: ref must not be empty", n.Line)
+	}
+	if strings.ContainsAny(s, "\r\n") {
+		return fmt.Errorf("line %d: ref must be a single line", n.Line)
+	}
+	*r = Ref(s)
+	return nil
+}
+
 type Item struct {
 	ID     string `yaml:"id"`
 	As     string `yaml:"as"`
 	Want   string `yaml:"want"`
 	SoThat string `yaml:"so_that"`
+	Ref    Ref    `yaml:"ref,omitempty"`
 	Status Status `yaml:"status"`
 	Story  string `yaml:"story,omitempty"`
 }
@@ -187,6 +210,10 @@ func (b *Backlog) Validate() error {
 			}
 		}
 
+		if r := string(it.Ref); r != strings.TrimSpace(r) || strings.ContainsAny(r, "\r\n") {
+			errs = append(errs, fmt.Errorf("%s (%s): \"ref\" must be trimmed, single-line text", pos, it.ID))
+		}
+
 		if !it.Status.Valid() {
 			errs = append(errs, fmt.Errorf("%s (%s): invalid status %q", pos, it.ID, it.Status))
 		} else if it.RequiresStory() && it.Story == "" {
@@ -229,9 +256,9 @@ func (b *Backlog) NextID() string {
 	return fmt.Sprintf("US-%03d", highest+1)
 }
 
-// Add appends a new todo item at the bottom (lowest priority).
-func (b *Backlog) Add(as, want, soThat string) Item {
-	it := Item{ID: b.NextID(), As: as, Want: want, SoThat: soThat, Status: StatusTodo}
+// Add appends a new todo item at the bottom (lowest priority). ref may be "".
+func (b *Backlog) Add(as, want, soThat, ref string) Item {
+	it := Item{ID: b.NextID(), As: as, Want: want, SoThat: soThat, Ref: Ref(ref), Status: StatusTodo}
 	b.Items = append(b.Items, it)
 	return it
 }

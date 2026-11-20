@@ -1,0 +1,76 @@
+$ storyline list
+   ID      STATUS       STORY
+▶  US-002  todo         As admin, I want to see bookings
+   US-003  in-progress  As coach, I want to cancel a class
+$ storyline list -a
+   ID      STATUS       STORY
+   US-001  done         As club player, I want to book a court
+▶  US-002  todo         As admin, I want to see bookings
+   US-003  in-progress  As coach, I want to cancel a class
+   US-004  discarded    As owner, I want to close the club
+$ storyline list -s todo
+   ID      STATUS  STORY
+▶  US-002  todo    As admin, I want to see bookings
+$ storyline list -s done
+  ID      STATUS  STORY
+  US-001  done    As club player, I want to book a court
+$ storyline list -s nope
+Error: invalid status "nope"
+error: invalid status "nope"
+$ storyline add (1)
+✓ added US-005: As referee, I want to log a result
+$ storyline add (2, padded)
+✓ added US-006: As fan, I want to follow a match
+$ storyline add (empty)
+Error: --as, --want and --so-that must not be empty
+error: --as, --want and --so-that must not be empty
+$ storyline list after adds
+   ID      STATUS       STORY
+▶  US-002  todo         As admin, I want to see bookings
+   US-003  in-progress  As coach, I want to cancel a class
+   US-005  todo         As referee, I want to log a result
+   US-006  todo         As fan, I want to follow a match
+$ storyline list -a after adds
+   ID      STATUS       STORY
+   US-001  done         As club player, I want to book a court
+▶  US-002  todo         As admin, I want to see bookings
+   US-003  in-progress  As coach, I want to cancel a class
+   US-004  discarded    As owner, I want to close the club
+   US-005  todo         As referee, I want to log a result
+   US-006  todo         As fan, I want to follow a match
+$ cat storyline/backlog.yaml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fjbalsamo/storyline/main/schema/backlog.schema.json
+version: 1
+backlog:
+  - id: US-001
+    as: club player
+    want: to book a court
+    so_that: I can play
+    status: done
+    story: storyline/done/x/story.md
+  - id: US-002
+    as: admin
+    want: to see bookings
+    so_that: I can plan
+    status: todo
+  - id: US-003
+    as: coach
+    want: to cancel a class
+    so_that: players are told
+    status: in-progress
+    story: storyline/active/y/story.md
+  - id: US-004
+    as: owner
+    want: to close the club
+    so_that: nobody turns up
+    status: discarded
+  - id: US-005
+    as: referee
+    want: to log a result
+    so_that: scores are fair
+    status: todo
+  - id: US-006
+    as: fan
+    want: to follow a match
+    so_that: I don't miss it
+    status: todo

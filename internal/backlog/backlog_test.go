@@ -90,7 +90,7 @@ func TestNextIDAndAdd(t *testing.T) {
 		t.Fatalf("NextID on empty = %s", got)
 	}
 	b.Items = append(b.Items, Item{ID: "US-007", Status: StatusDiscarded})
-	it := b.Add("a", "w", "s")
+	it := b.Add("a", "w", "s", "")
 	if it.ID != "US-008" || it.Status != StatusTodo {
 		t.Fatalf("Add = %+v", it)
 	}
@@ -122,5 +122,77 @@ func TestSaveRoundTrip(t *testing.T) {
 	}
 	if !strings.HasPrefix(have.String(), "# yaml-language-server: $schema=") {
 		t.Fatal("missing schema header")
+	}
+}
+
+const refHead = "version: 1\nbacklog:\n"
+
+func refItem(id, ref string) string {
+	return "  - id: " + id + "\n    as: a\n    want: b\n    so_that: c\n" + ref + "    status: todo\n"
+}
+
+func TestRefValidAndOptional(t *testing.T) {
+	b := mustDecode(t, refHead+refItem("US-001", "    ref: TKT-001\n")+refItem("US-002", ""))
+	if err := b.Validate(); err != nil {
+		t.Fatal(err)
+	}
+	if b.Items[0].Ref != "TKT-001" || b.Items[1].Ref != "" {
+		t.Errorf("refs = %q, %q", b.Items[0].Ref, b.Items[1].Ref)
+	}
+}
+
+func TestOldBacklogWithoutRefStaysValid(t *testing.T) {
+	if err := mustDecode(t, sample).Validate(); err != nil {
+		t.Errorf("a backlog without ref must stay valid: %v", err)
+	}
+}
+
+func TestSeveralStoriesShareARef(t *testing.T) {
+	b := mustDecode(t, refHead+refItem("US-001", "    ref: TKT-001\n")+refItem("US-002", "    ref: TKT-001\n"))
+	if err := b.Validate(); err != nil {
+		t.Errorf("sharing a ref must be allowed: %v", err)
+	}
+}
+
+func TestRefRejectsEmptyAndMultiLine(t *testing.T) {
+	tests := []struct{ name, ref, want string }{
+		{"empty", "    ref: \"\"\n", "ref must not be empty"},
+		{"blank", "    ref: \"   \"\n", "ref must not be empty"},
+		{"multi-line", "    ref: \"TKT-1\\nTKT-2\"\n", "ref must be a single line"},
+		{"not text", "    ref: [a, b]\n", "ref must be text"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := Decode(strings.NewReader(refHead + refItem("US-001", tt.ref)))
+			if err == nil || !strings.Contains(err.Error(), tt.want) {
+				t.Errorf("err = %v, want %q", err, tt.want)
+			}
+		})
+	}
+}
+
+func TestValidateRejectsUntrimmedRef(t *testing.T) {
+	for _, ref := range []string{" TKT-1", "TKT-1 ", "A\nB"} {
+		b := New()
+		b.Add("a", "b", "c", ref)
+		if err := b.Validate(); err == nil || !strings.Contains(err.Error(), `"ref" must be trimmed`) {
+			t.Errorf("ref %q: err = %v", ref, err)
+		}
+	}
+}
+
+func TestRefIsEncodedBetweenSoThatAndStatus(t *testing.T) {
+	b := New()
+	b.Add("a", "b", "c", "TKT-001")
+	b.Add("a", "b", "c", "")
+	var buf bytes.Buffer
+	if err := b.Encode(&buf); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(buf.String(), "    so_that: c\n    ref: TKT-001\n    status: todo\n") {
+		t.Errorf("encoded:\n%s", buf.String())
+	}
+	if strings.Count(buf.String(), "ref:") != 1 {
+		t.Error("an item without ref must not write the field")
 	}
 }
