@@ -11,7 +11,7 @@
 
 storyline turns a backlog of one-line user stories into working software, one thin **vertical slice** at a time. Your AI assistant writes the code; you steer, review small diffs and try each step by hand.
 
-It works with Claude Code, Cursor, GitHub Copilot, Gemini CLI, Codex, and any tool that reads `AGENTS.md`.
+It works with Claude Code, Cursor, GitHub Copilot, Gemini CLI, Codex, Antigravity CLI, and any tool that reads `AGENTS.md`.
 
 ---
 
@@ -311,9 +311,12 @@ The seven commands are written once and rendered into each tool's native format.
 | GitHub Copilot | `copilot` | `.github/prompts/story-*.prompt.md` | `/story-refine` |
 | Gemini CLI | `gemini` | `.gemini/commands/story/*.toml` | `/story:refine` |
 | Codex | `codex` | `.agents/skills/story-*/SKILL.md` | `$story-refine` |
+| Antigravity CLI | `antigravity` (same files as `codex`) | `.agents/skills/story-*/SKILL.md` | `/story-refine` |
 | Any other tool | none needed | a managed section in `AGENTS.md` | ask in plain words: *"refine the next story"* |
 
-`--tools all` sets them all up. `AGENTS.md` is written for every selection (`agents-md` is still accepted in `--tools`, as a no-op). Pointer files: `CLAUDE.md` (`claude`) and `GEMINI.md` (`gemini`). The storyline section of `AGENTS.md` lives between `<!-- storyline:start -->` and `<!-- storyline:end -->`. storyline only rewrites that block and never touches the rest of your file.
+Since 2026-06-18 Gemini CLI keeps working only with paid API keys; Google-account sign-in moved to Antigravity CLI ([announcement](https://developers.googleblog.com/an-important-update-transitioning-gemini-cli-to-antigravity-cli/)). Use the Antigravity row for it: it reads `AGENTS.md` directly and turns each skill into a `/story-*` command ([skills](https://antigravity.google/docs/skills/)), so it needs no pointer file. It does not read `.gemini/commands/*.toml`. The `gemini` adapter stays for Gemini CLI with an API key. Antigravity support is untested against a real `agy`: see [docs/antigravity-test.md](docs/antigravity-test.md).
+
+`--tools all` sets them all up. `AGENTS.md` is written for every selection (`agents-md` is still accepted in `--tools`, as a no-op). `antigravity` is accepted as an alias of `codex`. Pointer files: `CLAUDE.md` (`claude`) and `GEMINI.md` (`gemini`). The storyline section of `AGENTS.md` lives between `<!-- storyline:start -->` and `<!-- storyline:end -->`. storyline only rewrites that block and never touches the rest of your file.
 
 To customize the commands, edit the files storyline generated in your project. Running `init --force` restores the defaults.
 
