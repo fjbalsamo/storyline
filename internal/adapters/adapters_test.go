@@ -181,3 +181,22 @@ func TestAgentsMDMentionsImport(t *testing.T) {
 		}
 	}
 }
+
+func TestAntigravityAlias(t *testing.T) {
+	one, err := Get([]string{"antigravity"})
+	if err != nil || len(one) != 1 || one[0].ID() != "codex" {
+		t.Fatalf("antigravity: %v, err %v", one, err)
+	}
+	both, err := Get([]string{"codex", " Antigravity "})
+	if err != nil || len(both) != 1 {
+		t.Fatalf("codex+antigravity: %v, err %v", both, err)
+	}
+	all, err := Get([]string{"all", "antigravity"})
+	if err != nil || len(all) != len(All()) {
+		t.Fatalf("all+antigravity: %d adapters, err %v", len(all), err)
+	}
+	_, err = Get([]string{"foo"})
+	if err == nil || !strings.Contains(err.Error(), "antigravity") {
+		t.Errorf("error does not mention antigravity: %v", err)
+	}
+}

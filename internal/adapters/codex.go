@@ -12,6 +12,12 @@ import (
 // a skill is invoked explicitly as $story-<name>.
 // Docs: https://learn.chatgpt.com/docs/build-skills (was developers.openai.com/codex/skills)
 //
+// Antigravity CLI (agy) reads the same files: workspace skills in
+// .agents/skills/<name>/SKILL.md (name + description frontmatter), exposed as
+// /<name>, plus AGENTS.md. --tools antigravity is an alias of this adapter.
+// Docs: https://antigravity.google/docs/skills/
+// Docs: https://antigravity.google/docs/rules/
+//
 // Codex reads AGENTS.md natively, so it needs no pointer file.
 // Docs: https://learn.chatgpt.com/docs/agent-configuration/agents-md
 type codex struct{}

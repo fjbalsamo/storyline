@@ -69,7 +69,7 @@ func toolNames(tools []adapters.Adapter) string {
 
 func init() {
 	initCmd.Flags().String("tools", "claude",
-		"comma-separated AI tools to set up: "+strings.Join(adapters.IDs(), ", ")+", or all (agents-md is always set up)")
+		"comma-separated AI tools to set up: "+strings.Join(adapters.IDs(), ", ")+", antigravity (same as codex), or all (agents-md is always set up)")
 	initCmd.Flags().Bool("force", false, "overwrite existing command files (the backlog is never overwritten)")
 	rootCmd.AddCommand(initCmd)
 }

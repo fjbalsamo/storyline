@@ -4,6 +4,7 @@ package adapters
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/fjbalsamo/storyline/internal/templates"
@@ -47,6 +48,28 @@ func IDs() []string {
 	return ids
 }
 
+// Aliases maps extra --tools IDs to the adapter they resolve to. An alias
+// writes exactly the files of its target and is never listed in All().
+var Aliases = map[string]string{"antigravity": "codex"}
+
+// validIDs lists the accepted --tools values for error messages.
+func validIDs() string {
+	ids := IDs()
+	for _, a := range sortedAliases() {
+		ids = append(ids, a+" (alias of "+Aliases[a]+")")
+	}
+	return strings.Join(ids, ", ")
+}
+
+func sortedAliases() []string {
+	var out []string
+	for a := range Aliases {
+		out = append(out, a)
+	}
+	sort.Strings(out)
+	return out
+}
+
 // Get resolves adapter IDs. "all" selects every adapter. Duplicates are
 // dropped and the order of first appearance is kept.
 func Get(ids []string) ([]Adapter, error) {
@@ -64,6 +87,9 @@ func Get(ids []string) ([]Adapter, error) {
 	}
 	for _, raw := range ids {
 		id := strings.ToLower(strings.TrimSpace(raw))
+		if target, isAlias := Aliases[id]; isAlias {
+			id = target
+		}
 		switch a, ok := byID[id]; {
 		case id == "all":
 			for _, a := range All() {
@@ -73,11 +99,11 @@ func Get(ids []string) ([]Adapter, error) {
 			add(a)
 		default:
 			return nil, fmt.Errorf("unknown tool %q: valid ids are %s, all",
-				raw, strings.Join(IDs(), ", "))
+				raw, validIDs())
 		}
 	}
 	if len(out) == 0 {
-		return nil, fmt.Errorf("no tools given: valid ids are %s, all", strings.Join(IDs(), ", "))
+		return nil, fmt.Errorf("no tools given: valid ids are %s, all", validIDs())
 	}
 	return out, nil
 }
