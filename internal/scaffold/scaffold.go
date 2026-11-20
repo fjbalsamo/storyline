@@ -11,6 +11,7 @@ import (
 
 	"github.com/fjbalsamo/storyline/internal/adapters"
 	"github.com/fjbalsamo/storyline/internal/backlog"
+	"github.com/fjbalsamo/storyline/internal/config"
 	"github.com/fjbalsamo/storyline/internal/templates"
 )
 
@@ -60,10 +61,33 @@ func Run(opts Options) (Result, error) {
 		res.Skipped = append(res.Skipped, Skipped{backlog.DefaultPath, "exists, never overwritten"})
 	}
 
+	if err := writeConfig(opts.Root, &res); err != nil {
+		return res, err
+	}
 	if err := writeTools(opts, &res); err != nil {
 		return res, err
 	}
 	return res, nil
+}
+
+// writeConfig creates storyline/config.yaml named after the project folder.
+// Like the backlog, it is never overwritten, not even with Force.
+func writeConfig(root string, res *Result) error {
+	abs, err := filepath.Abs(root)
+	if err != nil {
+		return fmt.Errorf("resolve %s: %w", root, err)
+	}
+	content := config.Default(config.Slug(filepath.Base(abs)))
+	created, err := writeIfMissing(root, config.Path, content, false)
+	if err != nil {
+		return err
+	}
+	if created {
+		res.Created = append(res.Created, config.Path)
+	} else {
+		res.Skipped = append(res.Skipped, Skipped{config.Path, "exists, never overwritten"})
+	}
+	return nil
 }
 
 // writeTools renders every selected adapter and writes its files.

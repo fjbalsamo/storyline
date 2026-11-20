@@ -361,3 +361,59 @@ func TestAgentsMDCreatedVsUpdated(t *testing.T) {
 		}
 	})
 }
+
+func TestConfigNamedAfterFolder(t *testing.T) {
+	root := filepath.Join(t.TempDir(), "My App_2")
+	if err := os.Mkdir(root, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	res, err := Run(Options{Root: root, Tools: tools(t, "claude")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !contains(res.Created, "storyline/config.yaml") {
+		t.Errorf("Created = %v", res.Created)
+	}
+	got := mustRead(t, filepath.Join(root, "storyline/config.yaml"))
+	for _, want := range []string{"version: 1", "name: my-app-2", "config.schema.json", "# dependsOn:"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("config.yaml lacks %q:\n%s", want, got)
+		}
+	}
+}
+
+func TestConfigNeverOverwritten(t *testing.T) {
+	root := t.TempDir()
+	if _, err := Run(Options{Root: root, Tools: tools(t, "claude")}); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(root, "storyline/config.yaml")
+	mustWrite(t, path, "mine")
+
+	for _, force := range []bool{false, true} {
+		res, err := Run(Options{Root: root, Force: force, Tools: tools(t, "claude")})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := mustRead(t, path); got != "mine" {
+			t.Errorf("force=%v: config.yaml overwritten: %q", force, got)
+		}
+		if contains(res.Created, "storyline/config.yaml") {
+			t.Errorf("force=%v: reported as created", force)
+		}
+	}
+}
+
+func TestConfigAddedToOldProject(t *testing.T) {
+	root := t.TempDir()
+	if _, err := Run(Options{Root: root, Tools: tools(t, "claude")}); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Remove(filepath.Join(root, "storyline/config.yaml")); err != nil {
+		t.Fatal(err)
+	}
+	res, err := Run(Options{Root: root, Tools: tools(t, "claude")})
+	if err != nil || !contains(res.Created, "storyline/config.yaml") {
+		t.Errorf("Created = %v, err = %v", res.Created, err)
+	}
+}

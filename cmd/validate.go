@@ -3,9 +3,12 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"io/fs"
+	"os"
 	"path/filepath"
 
 	"github.com/fjbalsamo/storyline/internal/backlog"
+	"github.com/fjbalsamo/storyline/internal/config"
 	"github.com/fjbalsamo/storyline/internal/story"
 	"github.com/spf13/cobra"
 )
@@ -25,13 +28,37 @@ var validateCmd = &cobra.Command{
 			return fmt.Errorf("%s is invalid:\n%w", path, err)
 		}
 
+		cfgPath := filepath.Join(filepath.Dir(path), "config.yaml")
+		if err := validateConfig(cfgPath); err != nil {
+			return err
+		}
+
 		noun := "stories"
 		if len(b.Items) == 1 {
 			noun = "story"
 		}
 		fmt.Fprintf(cmd.OutOrStdout(), "✓ %s is valid (%d %s)\n", path, len(b.Items), noun)
+		if _, err := os.Stat(cfgPath); err == nil {
+			fmt.Fprintf(cmd.OutOrStdout(), "✓ %s is valid\n", cfgPath)
+		}
 		return nil
 	},
+}
+
+// validateConfig checks config.yaml when it exists; a missing file is fine so
+// projects created before it existed keep working.
+func validateConfig(path string) error {
+	c, err := config.Load(path)
+	if errors.Is(err, fs.ErrNotExist) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("%s is invalid:\n%w", path, err)
+	}
+	if err := c.Validate(); err != nil {
+		return fmt.Errorf("%s is invalid:\n%w", path, err)
+	}
+	return nil
 }
 
 func init() {

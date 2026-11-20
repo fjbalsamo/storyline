@@ -14,7 +14,8 @@ var initCmd = &cobra.Command{
 	Use:   "init [dir]",
 	Short: "Set up storyline in a project",
 	Long: `Set up storyline in a project (current directory by default):
-the storyline/ tree, an empty backlog and the story commands (context, add,
+the storyline/ tree, an empty backlog, storyline/config.yaml (this repo's
+name and related repos; never overwritten) and the story commands (context, add,
 refine, slice, apply, verify, done) for the AI tools you pick with --tools.
 AGENTS.md is always written, and each tool that does not read it natively
 gets a one-line pointer file (CLAUDE.md, GEMINI.md) that imports it.

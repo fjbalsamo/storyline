@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/fjbalsamo/storyline/main/schema/config.schema.json",
+  "title": "storyline config",
+  "description": "This repo's name and the related repos it depends on. storyline only gives this to the AI as context; it never checks the repos exist and never blocks.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "metadata"],
+  "properties": {
+    "version": { "const": 1 },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": { "$ref": "#/$defs/slug", "description": "This repo's name." },
+        "description": { "type": "string" }
+      }
+    },
+    "spec": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "type": "string", "description": "Free text, e.g. front, back, mobile." },
+        "dependsOn": {
+          "type": "array",
+          "description": "Repos that own things this repo needs. The AI suggests stories there and keeps working with a mock.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name"],
+            "properties": {
+              "name": { "$ref": "#/$defs/slug" },
+              "url": {
+                "type": "string",
+                "pattern": "^(https?://[^\\s/]+\\S*|[A-Za-z0-9._-]+@[A-Za-z0-9._-]+:\\S+)$",
+                "description": "Git-clonable URL: http(s) or git@host:path."
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    }
+  }
+}
