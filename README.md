@@ -105,7 +105,7 @@ Everything about a specific feature lives in `storyline/` (`story.md`, `slice.md
 
 ## The backlog
 
-`storyline/backlog.yaml` is plain YAML. **Order is priority**: the first open story is the next one to work on.
+`storyline/backlog.yaml` is plain YAML. **Order is priority**: the first open story is the next one to work on. Use `storyline move` to reorder.
 
 ```yaml
 # yaml-language-server: $schema=https://raw.githubusercontent.com/fjbalsamo/storyline/main/schema/backlog.schema.json
@@ -191,6 +191,7 @@ US-001: Cancel a booking
 | `storyline add --as … --want … --so-that …` | Append a story to the bottom of the backlog with the next ID |
 | `storyline list [-a] [-s status]` | Open stories in priority order. `▶` marks the next one. `-a` includes done/discarded |
 | `storyline edit <id> [--as …] [--want …] [--so-that …]` | Fix the wording of a story. **Only `as`, `want` and `so_that` are editable**; `id`, `status` and `story` never are (use `storyline status` for status). At least one flag is required and values can't be empty. Allowed on `todo` and `refining`; on `ready` and `in-progress` it warns that `story.md` may need the same change; `done` and `discarded` stories are rejected. Comments and formatting in the backlog are kept, only the edited values change, and nothing is saved if the backlog would be invalid |
+| `storyline move <id> --top \| --bottom \| --before <id> \| --after <id>` | Reorder the backlog to change priority. Pass exactly one flag. `--top` puts the story before the first open story. Only open stories can be moved (`done` and `discarded` are history), but the `--before`/`--after` reference can have any status. The story moves with the comments directly above it and the rest of the file is left as it is. Nothing is saved if the backlog would be invalid |
 | `storyline validate` | Check the backlog (ID format and uniqueness, required fields, valid status, story path when needed) and every story it points to: 1–5 criteria numbered `.1, .2, …` each with Given/When/Then, at most 8 numbered tasks that reference existing criteria, and a folder that matches the status |
 | `storyline status <id> <status> [--story <path>]` | Move a story along the allowed transitions (table below). Moving to `ready` needs a story file that passes `validate`; `--story` sets its path and is only accepted with `ready`. Nothing is saved if the backlog would be invalid |
 | `storyline done <id> [--force]` | Close an `in-progress` story: needs a `tasks.md` with every task checked, moves `storyline/active/<dir>` to `storyline/done/<YYYY-MM-DD>-<dir>`, sets `done` and updates the story path. `--force` skips only the tasks check and prints a warning. Living docs are not touched |
