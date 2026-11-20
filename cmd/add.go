@@ -42,7 +42,7 @@ var addCmd = &cobra.Command{
 			return fmt.Errorf("%s is invalid, fix it before adding stories:\n%w", path, err)
 		}
 
-		it := b.Add(as, want, soThat, ref)
+		it := b.AddWithRef(as, want, soThat, ref)
 		if err := b.Save(path); err != nil {
 			return err
 		}

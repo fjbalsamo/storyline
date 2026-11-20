@@ -256,8 +256,13 @@ func (b *Backlog) NextID() string {
 	return fmt.Sprintf("US-%03d", highest+1)
 }
 
-// Add appends a new todo item at the bottom (lowest priority). ref may be "".
-func (b *Backlog) Add(as, want, soThat, ref string) Item {
+// Add appends a new todo item at the bottom (lowest priority).
+func (b *Backlog) Add(as, want, soThat string) Item {
+	return b.AddWithRef(as, want, soThat, "")
+}
+
+// AddWithRef is Add for a story that came from somewhere else (ref may be "").
+func (b *Backlog) AddWithRef(as, want, soThat, ref string) Item {
 	it := Item{ID: b.NextID(), As: as, Want: want, SoThat: soThat, Ref: Ref(ref), Status: StatusTodo}
 	b.Items = append(b.Items, it)
 	return it

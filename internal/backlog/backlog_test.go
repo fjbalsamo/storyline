@@ -90,7 +90,7 @@ func TestNextIDAndAdd(t *testing.T) {
 		t.Fatalf("NextID on empty = %s", got)
 	}
 	b.Items = append(b.Items, Item{ID: "US-007", Status: StatusDiscarded})
-	it := b.Add("a", "w", "s", "")
+	it := b.Add("a", "w", "s")
 	if it.ID != "US-008" || it.Status != StatusTodo {
 		t.Fatalf("Add = %+v", it)
 	}
@@ -174,7 +174,7 @@ func TestRefRejectsEmptyAndMultiLine(t *testing.T) {
 func TestValidateRejectsUntrimmedRef(t *testing.T) {
 	for _, ref := range []string{" TKT-1", "TKT-1 ", "A\nB"} {
 		b := New()
-		b.Add("a", "b", "c", ref)
+		b.AddWithRef("a", "b", "c", ref)
 		if err := b.Validate(); err == nil || !strings.Contains(err.Error(), `"ref" must be trimmed`) {
 			t.Errorf("ref %q: err = %v", ref, err)
 		}
@@ -183,8 +183,8 @@ func TestValidateRejectsUntrimmedRef(t *testing.T) {
 
 func TestRefIsEncodedBetweenSoThatAndStatus(t *testing.T) {
 	b := New()
-	b.Add("a", "b", "c", "TKT-001")
-	b.Add("a", "b", "c", "")
+	b.AddWithRef("a", "b", "c", "TKT-001")
+	b.AddWithRef("a", "b", "c", "")
 	var buf bytes.Buffer
 	if err := b.Encode(&buf); err != nil {
 		t.Fatal(err)
