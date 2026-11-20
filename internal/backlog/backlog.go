@@ -4,6 +4,7 @@
 package backlog
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -120,6 +121,15 @@ func (b *Backlog) Encode(w io.Writer) error {
 // Save writes the backlog atomically (temp file + rename) so an interrupted
 // write never leaves a truncated backlog behind.
 func (b *Backlog) Save(path string) error {
+	var buf bytes.Buffer
+	if err := b.Encode(&buf); err != nil {
+		return err
+	}
+	return WriteFile(path, buf.Bytes())
+}
+
+// WriteFile atomically replaces the backlog file at path with data.
+func WriteFile(path string, data []byte) error {
 	dir := filepath.Dir(path)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return fmt.Errorf("save backlog: %w", err)
@@ -131,9 +141,9 @@ func (b *Backlog) Save(path string) error {
 	}
 	defer os.Remove(tmp.Name()) // no-op once renamed
 
-	if err := b.Encode(tmp); err != nil {
+	if _, err := tmp.Write(data); err != nil {
 		tmp.Close()
-		return err
+		return fmt.Errorf("save backlog: %w", err)
 	}
 	if err := tmp.Chmod(0o644); err != nil {
 		tmp.Close()

@@ -28,6 +28,7 @@ If empty, use the story marked ▶ in `storyline list`.
 5. Rules for criteria:
    - Observable from the user's point of view and testable.
    - 1 to 5 criteria. More than 5 means the story is too big: propose a split with `/story:add` instead.
+   - If the conversation changes the meaning of the story, update its wording with `storyline edit <ID> [--as …] [--want …] [--so-that …]` and keep `story.md` consistent with it. Never edit `backlog.yaml` by hand.
 6. Run `storyline status <ID> ready --story <path to story.md>`. It checks the story file and updates the backlog; do not edit the backlog yourself.
 
 Stop here. Do not plan or write code.
